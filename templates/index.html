@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body, .main-home-container {
+        background: #181c22 !important;
+    }
+    .glass-card {
+        background: rgba(30,34,40,0.92);
+        backdrop-filter: blur(10px);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(13,110,253,0.12);
+        margin-right: 1rem;
+    }
+    .feature-title {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+    .feature-desc {
+        color: #adb5bd;
+        font-size: 0.95em;
+    }
+    .main-home-container {
+        min-height: 100vh;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+<div class="main-home-container">
+    <div class="container">
+        <div class="row justify-content-center align-items-center" style="min-height: 90vh;">
+            <div class="col-lg-7 col-xl-6">
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" style="height:90px;width:90px;object-fit:cover;" class="rounded-circle shadow border border-3 border-primary bg-white">
+                    <h1 class="display-4 fw-bold text-white mt-3 mb-2" style="letter-spacing:2px;">NETSYSTEME</h1>
+                    <p class="lead text-info mb-0" style="font-weight:500;">
+                        Plateforme complète de gestion d'entreprise
+                    </p>
+                </div>
+                <div class="card glass-card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <h3 class="card-title text-center mb-4 text-white">Fonctionnalités</h3>
+                        <div class="row g-4">
+                            <div class="col-12 col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="feature-icon"><i data-feather="clock" class="text-primary"></i></span>
+                                    <div>
+                                        <div class="feature-title">Pointage géolocalisé</div>
+                                        <div class="feature-desc">Contrôle de présence par localisation</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="feature-icon"><i data-feather="tool" class="text-primary"></i></span>
+                                    <div>
+                                        <div class="feature-title">Interventions</div>
+                                        <div class="feature-desc">Planification et suivi</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="feature-icon"><i data-feather="package" class="text-primary"></i></span>
+                                    <div>
+                                        <div class="feature-title">Gestion de stock</div>
+                                        <div class="feature-desc">Inventaire et alertes</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="feature-icon"><i data-feather="users" class="text-primary"></i></span>
+                                    <div>
+                                        <div class="feature-title">Gestion clientèle</div>
+                                        <div class="feature-desc">CRM intégré</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="feature-icon"><i data-feather="credit-card" class="text-primary"></i></span>
+                                    <div>
+                                        <div class="feature-title">Suivi des dépenses</div>
+                                        <div class="feature-desc">Gestion financière</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="feature-icon"><i data-feather="shield" class="text-primary"></i></span>
+                                    <div>
+                                        <div class="feature-title">Gestion des rôles</div>
+                                        <div class="feature-desc">Accès sécurisé</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-5">
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-5 shadow">
+                                <i data-feather="log-in" class="me-2"></i>
+                                Se connecter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <p style="color:rgba(255,255,255,0.85); font-size:1.05em; font-weight:500;">
+                        <small>Administrateurs &bull; Commerciaux &bull; Techniciens</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

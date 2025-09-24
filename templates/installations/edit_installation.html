@@ -1,0 +1,98 @@
+<!-- templates/installations/edit_installation.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Modifier l'installation</h2>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.edit_installation', installation_id=installation.id) }}">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="prenom" class="form-label">Prénom</label>
+                <input type="text" class="form-control" id="prenom" name="prenom" 
+                       value="{{ installation.prenom }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="nom" class="form-label">Nom</label>
+                <input type="text" class="form-control" id="nom" name="nom" 
+                       value="{{ installation.nom }}" required>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="tel" class="form-label">Téléphone</label>
+                <input type="text" class="form-control" id="tel" name="tel" 
+                       value="{{ installation.telephone }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="total" class="form-label">Montant total</label>
+                <input type="number" step="0.01" class="form-control" id="total" name="total" 
+                       value="{{ installation.montant_total }}" required>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="avance" class="form-label">Avance</label>
+                <input type="number" step="0.01" class="form-control" id="avance" name="avance" 
+                       value="{{ installation.montant_avance }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="date_install" class="form-label">Date installation</label>
+                <input type="date" class="form-control" id="date_install" name="date_install" 
+                       value="{{ installation.date_installation.strftime('%Y-%m-%d') if installation.date_installation else '' }}" required>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="methode" class="form-label">Méthode de paiement</label>
+                <select class="form-control" id="methode" name="methode" required>
+                    <option value="cash" {% if installation.methode_paiement == 'cash' %}selected{% endif %}>Espèce</option>
+                    <option value="one_tranche" {% if installation.methode_paiement == 'one_tranche' %}selected{% endif %}>1 tranche</option>
+                    <option value="two_tranche" {% if installation.methode_paiement == 'two_tranche' %}selected{% endif %}>2 tranches</option>
+                    <option value="three_tranche" {% if installation.methode_paiement == 'three_tranche' %}selected{% endif %}>3 tranches</option>
+                    <option value="four_tranche" {% if installation.methode_paiement == 'four_tranche' %}selected{% endif %}>4 tranches</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="date_echeance" class="form-label">Date d'échéance</label>
+                <input type="date" class="form-control" id="date_echeance" name="date_echeance" 
+                       value="{{ installation.date_echeance.strftime('%Y-%m-%d') if installation.date_echeance else '' }}">
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="statut" class="form-label">Statut</label>
+                <select class="form-control" id="statut" name="statut" required>
+                    <option value="en_attente" {% if installation.statut == 'en_attente' %}selected{% endif %}>En attente</option>
+                    <option value="en_cours" {% if installation.statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                    <option value="termine" {% if installation.statut == 'termine' %}selected{% endif %}>Terminé</option>
+                    <option value="annule" {% if installation.statut == 'annule' %}selected{% endif %}>Annulé</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="contrat" class="form-label">Contrat</label>
+                <div class="input-group">
+                    <input type="file" class="form-control" id="contrat" name="contrat" accept=".pdf,.jpg,.jpeg,.png">
+                    {% if installation.contrat_path %}
+                    <a href="{{ url_for('static', filename=installation.contrat_path) }}" 
+                       class="input-group-text" 
+                       target="_blank"
+                       title="Voir le contrat actuel">
+                        <i class="fas fa-file-contract"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                <small class="form-text text-muted">
+                    {% if installation.contrat_path %}
+                    Fichier actuel: {{ installation.contrat_path.split('/')[-1] }}
+                    {% else %}
+                    Aucun fichier joint
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <a href="{{ url_for('main.installations') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

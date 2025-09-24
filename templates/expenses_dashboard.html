@@ -1,0 +1,570 @@
+{% extends "base.html" %}
+
+{% block title %}Dépenses - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- ===== Titre ===== -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold display-6">
+            <i data-feather="map-pin" class="text-primary me-2"></i>
+            Dépenses du site : <span class="text-primary">{{ site }}</span>
+        </h2>
+        <p class="text-muted">Analyse et suivi détaillés des finances et approvisionnements</p>
+    </div>
+
+    <!-- ===== Boutons d'action ===== -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+        {% if current_user.role.name == 'Administrateur' %}
+        <!-- Bouton approvisionnement -->
+        <button class="btn btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#addApproModal">
+            <i data-feather="dollar-sign"></i>
+            Approvisionnement
+        </button>
+
+        <!-- Bouton historique approvisionnements -->
+        <a href="{{ url_for('main.appro_history', site=site) }}"
+           class="btn btn-outline-info">
+            <i data-feather="list"></i>
+            Historique des approvisionnements
+        </a>
+        {% endif %}
+
+        <!-- Bouton nouvelle dépense -->
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#addExpenseModal">
+            <i data-feather="plus"></i>
+            Nouvelle dépense
+        </button>
+    </div>
+
+    <!-- ===== Navbar des mois ===== -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm rounded mb-4 p-3">
+        <!-- ===== Sélecteur des mois ===== -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i data-feather="calendar" class="me-1"></i> Filtrer par mois
+                </h6>
+                <div class="row g-2">
+                    {% set months = [
+                        'Janvier','Février','Mars','Avril','Mai','Juin',
+                        'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
+                    ] %}
+                    {% for i in range(1,13) %}
+                    <div class="col-6 col-md-2">
+                        <a href="#" class="btn w-100 month-link 
+                            {% if month_selected and month_selected|int == i %}btn-primary active{% else %}btn-outline-primary{% endif %}"
+                        data-month="{{ i }}">
+                            {{ months[i-1] }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== Filtres catégorie et employé ===== -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex flex-wrap gap-3 align-items-end">
+            <div>
+                <label class="form-label fw-bold">Catégorie</label>
+                <select id="filterCategory" class="form-select">
+                    <option value="">Toutes catégories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label fw-bold">Employé</label>
+                <select id="filterEmployee" class="form-select">
+                    <option value="">Tous employés</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.id }}" {% if selected_employee == emp.id %}selected{% endif %}>
+                        {{ emp.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ms-auto">
+                <button id="resetFilters" class="btn btn-outline-secondary d-none">
+                    <i data-feather="refresh-ccw"></i> Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Contenu dynamique ===== -->
+    <div id="expensesContent">
+
+        <!-- ===== KPIs ===== -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center p-3">
+                    <div class="text-info mb-2">
+                        <i data-feather="package" width="26"></i>
+                    </div>
+                    <h6 class="fw-bold text-muted">Approvisionnement</h6>
+                    <h4 id="kpiAppro" class="fw-bold text-info" data-value="{{ total_appro or 0 }}">
+                        {{ "%.0f"|format(total_appro) }} Fcfa
+                    </h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center p-3">
+                    <div class="text-danger mb-2">
+                        <i data-feather="shopping-cart" width="26"></i>
+                    </div>
+                    <h6 class="fw-bold text-muted">Dépenses</h6>
+                    <h4 id="kpiDep" class="fw-bold text-danger" data-value="{{ total_depenses or 0 }}">
+                        {{ "%.0f"|format(total_depenses) }} Fcfa
+                    </h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center p-3">
+                    <div class="text-success mb-2">
+                        <i data-feather="trending-up" width="26"></i>
+                    </div>
+                    <h6 class="fw-bold text-muted">Bénéfices</h6>
+                    <h4 id="kpiBen" class="fw-bold text-success" data-value="{{ benefice or 0 }}">
+                        {{ "%.0f"|format(benefice) }} Fcfa
+                    </h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center p-3">
+                    <div class="text-warning mb-2">
+                        <i data-feather="trending-down" width="26"></i>
+                    </div>
+                    <h6 class="fw-bold text-muted">Pertes</h6>
+                    <h4 id="kpiPer" class="fw-bold text-warning" data-value="{{ pertes or 0 }}">
+                        {{ "%.0f"|format(pertes) }} Fcfa
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Tableau des dépenses ===== -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i data-feather="list" class="me-2"></i> Liste des dépenses</h5>
+            </div>
+            <div class="card-body">
+                {% if expenses %}
+                <div class="table-responsive">
+                    <table id="depensesTable" class="table table-striped table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Titre</th>
+                                <th>Employé</th>
+                                <th>Montant</th>
+                                <th>Catégorie</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                            <tr>
+                                <td>{{ expense.date_depense.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <strong>{{ expense.titre }}</strong><br>
+                                    {% if expense.description %}
+                                        <small class="text-muted">{{ expense.description[:50] }}{% if expense.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if expense.user %}
+                                        {{ expense.user.prenom }} {{ expense.user.nom }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ "%.0f"|format(expense.montant) }} Fcfa</strong></td>
+                                <td>
+                                    {% if expense.categorie %}
+                                        <span class="badge bg-secondary">{{ expense.categorie }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Non catégorisé</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if expense.statut == 'en_attente' %}
+                                        <span class="badge bg-warning text-dark"><i data-feather="clock" width="14"></i> En attente</span>
+                                    {% elif expense.statut == 'approuve' %}
+                                        <span class="badge bg-success"><i data-feather="check-circle" width="14"></i> Approuvé</span>
+                                    {% elif expense.statut == 'rejete' %}
+                                        <span class="badge bg-danger"><i data-feather="x-circle" width="14"></i> Rejeté</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Voir détails -->
+                                        <a class="btn btn-outline-primary rounded-circle" data-bs-toggle="tooltip" title="Voir détails"
+                                        href="{{ url_for('main.expense_detail', expense_id=expense.id) }}">
+                                            <i data-feather="eye"></i>
+                                        </a>
+
+                                        <!-- Approuver / Désapprouver -->
+                                        {% if current_user.role.name == 'Administrateur' %}
+                                            {% if expense.statut == 'en_attente' or expense.statut == 'rejete' %}
+                                            <form action="{{ url_for('main.approve_expense', expense_id=expense.id) }}" method="post" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-success rounded-circle" data-bs-toggle="tooltip" title="Approuver">
+                                                    <i data-feather="check"></i>
+                                                </button>
+                                            </form>
+                                            {% elif expense.statut == 'approuve' %}
+                                            <form action="{{ url_for('main.reject_expense', expense_id=expense.id) }}" method="post" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-danger rounded-circle" data-bs-toggle="tooltip" title="Désapprouver">
+                                                    <i data-feather="slash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+
+                                            <!-- Éditer -->
+                                            <a class="btn btn-outline-warning rounded-circle" data-bs-toggle="tooltip" title="Éditer"
+                                            href="{{ url_for('main.edit_expense', expense_id=expense.id) }}">
+                                                <i data-feather="edit"></i>
+                                            </a>
+
+                                            <!-- Supprimer -->
+                                            <form action="{{ url_for('main.delete_expense', expense_id=expense.id, site=site) }}" 
+                                                method="post" class="delete-form" style="display:inline;">
+                                                <button type="button" class="btn btn-sm btn-danger delete-btn">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </form>
+
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="credit-card" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <p class="text-muted">Aucune dépense enregistrée</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+
+
+        <!-- ===== Graphiques ===== -->
+        <div class="row g-4 mt-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm rounded">
+                    <div class="card-body">
+                        <h6 class="text-center fw-bold">Répartition Approvisionnement vs Dépenses</h6>
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm rounded">
+                    <div class="card-body">
+                        <h6 class="text-center fw-bold">Bénéfices vs Pertes</h6>
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <h2 class="text-center fw-bold mt-5">Évolution mensuelle Approvisionnement vs Dépenses</h2>
+            <div class="col-12 mt-4">
+                <div class="card shadow-sm rounded">
+                    <div class="card-body">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Données mensuelles pour JS -->
+        <div id="monthlyData" style="display:none"
+             data-appro="{{ appro_mensuel|join(',') }}"
+             data-dep="{{ depenses_mensuel|join(',') }}">
+        </div>
+    </div>
+
+    <!-- ===================== MODAL APPROVISIONNEMENT ===================== -->
+    <div class="modal fade" id="addApproModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content"
+                action="{{ url_for('main.add_approvisionnement', site=site) }}"
+                method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouvel approvisionnement</h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="montant" class="form-label">Montant *</label>
+                    <input type="number" class="form-control" name="montant"
+                        min="0" step="0.01" required>
+
+                    <label for="date" class="form-label mt-3">Date *</label>
+                    <input type="date" class="form-control" name="date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">
+                        Approvisionner
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ===================== MODAL NOUVELLE DÉPENSE ===================== -->
+    <div class="modal fade" id="addExpenseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouvelle dépense</h5>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('main.add_expense', site=site) }}"
+                    method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Titre *</label>
+                            <input type="text" class="form-control" name="titre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Montant *</label>
+                                <input type="number" class="form-control"
+                                    name="montant" min="0" step="0.01" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Catégorie</label>
+                                <select class="form-select" name="categorie">
+                                    <option value="">Sélectionner</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Carburant">Carburant</option>
+                                    <option value="Repas">Repas</option>
+                                    <option value="Hébergement">Hébergement</option>
+                                    <option value="Matériel">Matériel</option>
+                                    <option value="Formation">Formation</option>
+                                    <option value="Salaire">Salaire</option>
+                                    <option value="Loyer">Loyer</option>
+                                    <option value="Eau">Facture eau</option>
+                                    <option value="Sonatel">Facture sonatel</option>
+                                    <option value="MainOeuvre">Main d'oeuvre mécanicien</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label class="form-label">Date de dépense</label>
+                            <input type="date" class="form-control" name="date_depense" value="{{ today }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Facture (PDF ou image)</label>
+                            <input type="file" class="form-control" name="facture" accept=".pdf,image/*">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            Ajouter dépense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== Scripts DataTable, AJAX et Chart.js ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // === DataTable ===
+        function initDataTable() {
+            if ($.fn.DataTable.isDataTable('#depensesTable')) {
+                $('#depensesTable').DataTable().destroy();
+            }
+            $('#depensesTable').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json' },
+                order: [[0, 'desc']],
+                responsive: true,
+                dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100]
+            });
+        }
+
+        // === Charts ===
+        function renderCharts(total_appro, total_depenses, benefice, pertes) {
+            if (window.pieChartInstance) window.pieChartInstance.destroy();
+            if (window.barChartInstance) window.barChartInstance.destroy();
+
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            window.pieChartInstance = new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: ['Approvisionnement', 'Dépenses'],
+                    datasets: [{ data: [total_appro, total_depenses], backgroundColor: ['#17a2b8', '#dc3545'] }]
+                }
+            });
+
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            window.barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Bénéfices', 'Pertes'],
+                    datasets: [{ label: 'Montant (Fcfa)', data: [benefice, pertes], backgroundColor: ['#28a745', '#ffc107'] }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderMonthlyChart() {
+            const monthlyData = document.getElementById('monthlyData');
+            const approData = monthlyData.dataset.appro.split(',').map(Number);
+            const depData = monthlyData.dataset.dep.split(',').map(Number);
+
+            if (window.lineChartInstance) window.lineChartInstance.destroy();
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            window.lineChartInstance = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: ['Jan','Fév','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'],
+                    datasets: [
+                        { label: 'Approvisionnement', data: approData, borderColor: '#17a2b8', backgroundColor: 'rgba(23,162,184,0.2)', fill: true, tension: 0.3 },
+                        { label: 'Dépenses', data: depData, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.2)', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function updateChartsFromDOM() {
+            const v = id => parseFloat(document.getElementById(id)?.dataset.value || '0');
+            renderCharts(v('kpiAppro'), v('kpiDep'), v('kpiBen'), v('kpiPer'));
+        }
+
+        // === Filtres ===
+        function updateFilters() {
+            const category = document.getElementById('filterCategory').value;
+            const employee = document.getElementById('filterEmployee').value;
+            const month = document.querySelector('.month-link.active')?.dataset.month || '';
+
+            fetch(`{{ url_for('main.expenses_by_site', site=site) }}?month=${month}&category=${category}&employee=${employee}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('#expensesContent');
+                document.querySelector('#expensesContent').innerHTML = newContent.innerHTML;
+
+                initDataTable();
+                updateChartsFromDOM();
+                renderMonthlyChart();
+                feather.replace();
+                enableTooltips();
+
+                // Affiche/masque le bouton reset
+                document.getElementById('resetFilters').classList.toggle('d-none', !category && !employee && !month);
+            });
+        }
+
+        // === Reset Filters ===
+        document.getElementById('resetFilters').addEventListener('click', function() {
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterEmployee').value = '';
+            document.querySelectorAll('.month-link').forEach(l => {
+                l.classList.remove('active', 'bg-primary', 'text-white');
+                l.classList.add('bg-light', 'text-dark');
+            });
+            updateFilters();
+        });
+
+        // === Initialisation ===
+        initDataTable();
+        updateChartsFromDOM();
+        renderMonthlyChart();
+        feather.replace();
+        enableTooltips();
+
+        // === Gestion des filtres ===
+        document.querySelectorAll('.month-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.month-link').forEach(l => {
+                    l.classList.remove('active', 'bg-primary', 'text-white');
+                    l.classList.add('bg-light', 'text-dark');
+                });
+                this.classList.add('active', 'bg-primary', 'text-white');
+                this.classList.remove('bg-light', 'text-dark');
+                updateFilters();
+            });
+        });
+
+        document.getElementById('filterCategory').addEventListener('change', updateFilters);
+        document.getElementById('filterEmployee').addEventListener('change', updateFilters);
+
+        // === Activation tooltips Bootstrap ===
+        function enableTooltips() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+        }
+
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Sélectionner tous les boutons de suppression
+        document.querySelectorAll(".delete-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                let form = btn.closest("form"); // Récupérer le formulaire associé
+
+                Swal.fire({
+                    title: "Êtes-vous sûr ?",
+                    text: "Cette dépense sera envoyée dans la corbeille.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Oui, supprimer",
+                    cancelButtonText: "Annuler"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit(); // Soumettre le formulaire si confirmé
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+{% endblock %}

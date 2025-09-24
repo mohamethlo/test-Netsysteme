@@ -1,0 +1,26 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Commercial assigné</th>
+            <th>Observations</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in clients %}
+        <tr>
+            <td>{{ c.prenom }} {{ c.nom }}</td>
+            <td>{{ commerciaux.get(c.assigned_to, 'N/A') }}</td>
+            <td>
+                {% if c.reminders %}
+                    {% for obs in c.reminders %}
+                        <div>- {{ obs.notes }} <small class="text-muted">({{ obs.remind_at.strftime('%d/%m/%Y') if obs.remind_at else '' }})</small></div>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-muted">Aucune observation</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

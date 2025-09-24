@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avances sur salaire</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .main-content {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content container">
+        <h2>Avances sur salaire</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.montant.label(class="form-label") }}
+                        {{ form.montant(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.motif.label(class="form-label") }}
+                        {{ form.motif(class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+                </form>
+            </div>
+        </div>
+
+        <hr>
+
+        <h4>Historique des demandes</h4>
+        <div class="table-responsive">
+            <table id="advancesTable" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Montant</th>
+                        <th>Motif</th>
+                        <th>Statut</th>
+                        <th>Notes admin</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adv in advances %}
+                    <tr>
+                        <td>{{ adv.date_demande.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ adv.montant }} Fcfa</td>
+                        <td>{{ adv.motif }}</td>
+                        <td>
+                            {% if adv.statut == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            {% elif adv.statut == 'approuve' %}
+                                <span class="badge bg-success">Approuvée</span>
+                            {% else %}
+                                <span class="badge bg-danger">Refusée</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ adv.notes_admin or '' }}</td>
+                        <td>
+                            {% if current_user.has_permission('all') and adv.statut == 'en_attente' %}
+                            <form method="POST" action="{{ url_for('main.approve_salary_advance', advance_id=adv.id) }}" style="display:inline;">
+                                <input type="text" name="notes_admin" class="form-control form-control-sm mb-1" placeholder="Note (optionnel)">
+                                <button class="btn btn-success btn-sm" type="submit">Approuver</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('main.refuse_salary_advance', advance_id=adv.id) }}" style="display:inline;">
+                                <input type="text" name="notes_admin" class="form-control form-control-sm mb-1" placeholder="Note (optionnel)">
+                                <button class="btn btn-danger btn-sm" type="submit">Refuser</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#advancesTable').DataTable();
+        });
+    </script>
+</body>
+</html>

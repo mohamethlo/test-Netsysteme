@@ -1,0 +1,225 @@
+{% extends "billing/base.html" %}
+
+{% block billing_content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="dollar-sign"></i>
+                    Tableau de bord - Facturation
+                </h2>
+                <span class="badge bg-primary">{{ current_user.role.name }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cartes de Statistiques -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                            <i data-feather="users" class="text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Clients</h6>
+                            <h4 class="mb-0">{{ total_clients }}</h4>
+                            <a href="{{ url_for('billing.manage_clients') }}" class="small text-primary text-decoration-none mt-1 d-block">
+                                Voir tous <i data-feather="arrow-right" width="14" height="14"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                            <i data-feather="file-text" class="text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Factures</h6>
+                            <h4 class="mb-0">{{ total_invoices }}</h4>
+                            <a href="{{ url_for('billing.manage_invoices') }}" class="small text-success text-decoration-none mt-1 d-block">
+                                Voir toutes <i data-feather="arrow-right" width="14" height="14"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded">
+                            <i data-feather="file" class="text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Proformas</h6>
+                            <h4 class="mb-0">{{ total_proformas }}</h4>
+                            <a href="{{ url_for('billing.manage_proformas') }}" class="small text-info text-decoration-none mt-1 d-block">
+                                Voir tous <i data-feather="arrow-right" width="14" height="14"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100 hover-effect">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                            <i data-feather="package" class="text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Produits</h6>
+                            <div class="d-flex align-items-baseline">
+                                <h4 class="mb-0 me-2">{{ total_products }}</h4>
+                                {% if low_stock > 0 %}
+                                <span class="badge bg-danger">{{ low_stock }} alertes</span>
+                                {% endif %}
+                            </div>
+                            <a href="{{ url_for('billing.manage_products') }}" class="small text-warning text-decoration-none mt-1 d-block">
+                                Voir tous <i data-feather="arrow-right" width="14" height="14"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dernières factures et proformas -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="fw-bold mb-0">
+                            <i data-feather="file-text" class="me-2"></i>
+                            Dernières factures
+                        </h4>
+                        <a href="{{ url_for('billing.manage_invoices') }}" class="btn btn-sm btn-outline-primary">
+                            Voir toutes
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in recent_invoices %}
+                                <tr class="hover-effect">
+                                    <td>
+                                        <a href="{{ url_for('billing.view_invoice', invoice_id=invoice.id) }}" class="text-primary fw-bold">
+                                            {{ invoice.invoice_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ invoice.billing_client.company_name|truncate(20) }}</td>
+                                    <td>{{ invoice.date.strftime('%d/%m/%Y') }}</td>
+                                    <td class="fw-bold">{{ "%.2f"|format(invoice.total_with_tax_and_discount()) }} Fcfa</td>
+                                    <td>
+                                        <span class="badge bg-{% if invoice.status == 'paid' %}success{% elif invoice.status == 'confirmed' %}primary{% else %}secondary{% endif %} rounded-pill">
+                                            {{ invoice.status|upper }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="fw-bold mb-0">
+                            <i data-feather="file" class="me-2"></i>
+                            Derniers proformas
+                        </h4>
+                        <a href="{{ url_for('billing.manage_proformas') }}" class="btn btn-sm btn-outline-info">
+                            Voir tous
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Client</th>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proforma in recent_proformas %}
+                                <tr class="hover-effect">
+                                    <td>
+                                        <a href="{{ url_for('billing.view_proforma', proforma_id=proforma.id) }}" class="text-info fw-bold">
+                                            {{ proforma.proforma_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ proforma.billing_client.company_name|truncate(20) }}</td>
+                                    <td>{{ proforma.date.strftime('%d/%m/%Y') }}</td>
+                                    <td class="fw-bold">{{ "%.2f"|format(proforma.total_with_tax_and_discount()) }} Fcfa</td>
+                                    <td>
+                                        <span class="badge bg-{% if proforma.status == 'converted' %}success{% elif proforma.status == 'sent' %}primary{% else %}secondary{% endif %} rounded-pill">
+                                            {{ proforma.status|upper }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-effect:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .table-hover tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .badge.rounded-pill {
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+    }
+</style>
+{% endblock %}

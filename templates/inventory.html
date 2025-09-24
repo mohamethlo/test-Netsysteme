@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion de stock - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="package"></i>
+                    Gestion de stock
+                </h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i data-feather="plus"></i>
+                    Nouvel article
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="package" class="text-primary me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Total articles</h6>
+                            <h4 class="mb-0">{{ items|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="alert-triangle" class="text-warning me-3"
+                            style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Stock faible</h6>
+                            <h4 class="mb-0">{{ items|selectattr('is_low_stock')|list|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="layers" class="text-info me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Catégories</h6>
+                            <h4 class="mb-0">{{ categories|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="trending-up" class="text-success me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Valeur totale</h6>
+                            <h4 class="mb-0">
+                                {{ "%.0f"|format(items|map(attribute='prix_achat')|map('default', 0)|map('float')|sum) }}Fcfa
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Items -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Articles en stock</h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Nom</th>
+                                    <th>Catégorie</th>
+                                    <th>Quantité</th>
+                                    <th>Unité</th>
+                                    <th>Prix achat</th>
+                                    <th>Prix vente</th>
+                                    <th>Emplacement</th>
+                                    <th>Image</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr {% if item.is_low_stock %}class="table-warning" {% endif %}>
+                                    <td>
+                                        {% if item.reference %}
+                                        <code>{{ item.reference }}</code>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ item.name }}</strong>
+                                        {% if item.description %}
+                                        <br><small class="text-muted">{{ item.description[:50] }}{% if
+                                            item.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.category %}
+                                        {{ item.category.name }}
+                                        {% else %}
+                                        <span class="text-muted">Non catégorisé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="{% if item.is_low_stock %}text-warning fw-bold{% endif %}">
+                                            {{ item.quantity }}
+                                        </span>
+                                        {% if item.is_low_stock %}
+                                        <i data-feather="alert-triangle" class="text-warning ms-1"
+                                            style="width: 16px; height: 16px;"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.unit }}</td>
+                                    <td>
+                                        {% if item.prix_achat %}
+                                        {{ "%.2f"|format(item.prix_achat) }}Fcfa
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.prix_vente %}
+                                        {{ "%.2f"|format(item.prix_vente) }}Fcfa
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.emplacement %}
+                                        {{ item.emplacement }}
+                                        {% else %}
+                                        <span class="text-muted">Non défini</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.image_path %}
+                                        <a href="#" class="image-preview" 
+                                        data-image-url="{{ url_for('static', filename=item.image_path) }}"
+                                        data-bs-toggle="modal" data-bs-target="#imagePreviewModal">
+                                            <img src="{{ url_for('static', filename=item.image_path) }}" 
+                                                style="width: 50px; height: 50px; object-fit: cover;" 
+                                                class="rounded" 
+                                                title="Cliquez pour agrandir">
+                                        </a>
+                                        {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                            style="width: 50px; height: 50px;">
+                                            <i data-feather="package" class="text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.is_low_stock %}
+                                        <span class="badge bg-warning">Stock faible</span>
+                                        {% else %}
+                                        <span class="badge bg-success">En stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('main.edit_inventory_item', item_id=item.id) }}" 
+                                                class="btn btn-outline-primary" title="Modifier">
+                                                    <i data-feather="edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-warning" title="Sortie de stock"
+                                                onclick="openOutboundModal({{ item.id }}, '{{ item.name }}')">
+                                                <i data-feather="arrow-right"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" title="Ajuster stock"
+                                                onclick="openAdjustStockModal({{ item.id }}, {{ item.quantity }})">
+                                                <i data-feather="edit-3"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" title="Supprimer"
+                                                onclick="confirmDelete({{ item.id }}, '{{ item.name }}')">
+                                                <i data-feather="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="package" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucun article en stock</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Single Modal for all images -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <img id="modalImageContent" src="" 
+                     style="max-width: 100%; max-height: 80vh;" 
+                     class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer l'article "<span id="itemNameToDelete"></span>" ?</p>
+                <p class="text-danger">Cette action est irréversible !</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="deleteForm" method="POST">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvel article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.add_inventory_item') }}" method="POST"  enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label for="name" class="form-label">Nom *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="reference" class="form-label">Référence</label>
+                            <input type="text" class="form-control" id="reference" name="reference">
+                        </div>
+                        <div class="col-12">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="category_id" class="form-label">Catégorie</label>
+                            <select class="form-select" id="category_id" name="category_id">
+                                <option value="">Sans catégorie</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="quantity" class="form-label">Quantité *</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="0" value="0"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="unit" class="form-label">Unité</label>
+                            <input type="text" class="form-control" id="unit" name="unit" value="pièce">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="prix_achat" class="form-label">Prix d'achat (Fcfa)</label>
+                            <input type="number" class="form-control" id="prix_achat" name="prix_achat" min="0"
+                                step="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="prix_vente" class="form-label">Prix de vente (Fcfa)</label>
+                            <input type="number" class="form-control" id="prix_vente" name="prix_vente" min="0"
+                                step="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="seuil_alerte" class="form-label">Seuil d'alerte</label>
+                            <input type="number" class="form-control" id="seuil_alerte" name="seuil_alerte" min="0"
+                                value="10">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="fournisseur" class="form-label">Fournisseur</label>
+                            <input type="text" class="form-control" id="fournisseur" name="fournisseur">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="emplacement" class="form-label">Emplacement</label>
+                            <input type="text" class="form-control" id="emplacement" name="emplacement">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="image" class="form-label">Image de l'article</label>
+                            <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter article</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Outbound Stock Modal -->
+<div class="modal fade" id="outboundStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="outboundStockForm">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">Sortie de stock</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="outboundItemId" name="item_id">
+                    <div class="mb-3">
+                        <label for="outboundQuantity" class="form-label">Quantité à sortir *</label>
+                        <input type="number" class="form-control" id="outboundQuantity" name="quantity" min="1" required>
+                        <small class="text-muted">Stock actuel: <span id="currentStockDisplay"></span></small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="outboundReason" class="form-label">Raison</label>
+                        <select class="form-select" id="outboundReason" name="reason">
+                            <option value="Vente">Vente</option>
+                            <option value="Perte">Perte</option>
+                            <option value="Déchet">Déchet</option>
+                            <option value="Transfert">Transfert</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="customReasonContainer" style="display: none;">
+                        <label for="customReason" class="form-label">Précisez la raison</label>
+                        <input type="text" class="form-control" id="customReason" name="custom_reason">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning">Confirmer sortie</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Modal Ajuster Stock -->
+<div class="modal fade" id="adjustStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="adjustStockForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajuster le stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="adjustItemId" name="item_id">
+                    <div class="mb-3">
+                        <label for="newQuantity" class="form-label">Nouvelle quantité</label>
+                        <input type="number" class="form-control" id="newQuantity" name="quantity" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Mettre à jour</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function openAdjustStockModal(itemId, currentQuantity) {
+        document.getElementById('adjustItemId').value = itemId;
+        document.getElementById('newQuantity').value = currentQuantity;
+        var modal = new bootstrap.Modal(document.getElementById('adjustStockModal'));
+        modal.show();
+    }
+
+    document.getElementById('adjustStockForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const itemId = document.getElementById('adjustItemId').value;
+        const quantity = document.getElementById('newQuantity').value;
+        fetch(`/inventory/update_quantity/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ quantity: quantity })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || "Erreur lors de la mise à jour.");
+                }
+            });
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        feather.replace();
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        // Initialisation de DataTable sur votre tableau existant
+        $('#inventoryTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            responsive: true,
+            dom: '<"top"lf>rt<"bottom"ip>',
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            initComplete: function() {
+                // Replaces Feather icons after table initialization
+                if (window.feather) {
+                    feather.replace();
+                }
+            }
+        });
+    });
+    function confirmDelete(itemId, itemName) {
+    document.getElementById('itemNameToDelete').textContent = itemName;
+    const form = document.getElementById('deleteForm');
+    form.action = `/inventory/delete/${itemId}`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+// Gestion de la soumission du formulaire de suppression
+document.getElementById('deleteForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || "Erreur lors de la suppression");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Une erreur est survenue");
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de l'affichage des images dans la modale unique
+    document.querySelectorAll('.image-preview').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const imageUrl = this.getAttribute('data-image-url');
+            document.getElementById('modalImageContent').src = imageUrl;
+        });
+    });
+    
+    // Réinitialisation de la modale lorsqu'elle est fermée
+    $('#imagePreviewModal').on('hidden.bs.modal', function () {
+        document.getElementById('modalImageContent').src = '';
+    });
+});
+
+async function openOutboundModal(itemId, itemName) {
+    try {
+        // Récupère le stock actuel depuis le serveur
+        const response = await fetch(`/inventory/get_quantity/${itemId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Erreur de récupération du stock');
+        }
+
+        document.getElementById('outboundItemId').value = itemId;
+        document.getElementById('currentStockDisplay').textContent = data.quantity;
+        document.getElementById('outboundQuantity').max = data.quantity;
+        document.getElementById('outboundQuantity').value = 1;
+        
+        const modal = new bootstrap.Modal(document.getElementById('outboundStockModal'));
+        modal.show();
+
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'Erreur', 'Impossible de récupérer le stock actuel');
+    }
+}// Gestion de la raison personnalisée
+document.getElementById('outboundReason').addEventListener('change', function() {
+    const customContainer = document.getElementById('customReasonContainer');
+    customContainer.style.display = this.value === 'Autre' ? 'block' : 'none';
+});
+
+// Soumission du formulaire de sortie
+document.getElementById('outboundStockForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const itemId = document.getElementById('outboundItemId').value;
+    const quantity = document.getElementById('outboundQuantity').value;
+    let reason = document.getElementById('outboundReason').value;
+    
+    if (reason === 'Autre') {
+        reason = document.getElementById('customReason').value || 'Autre raison';
+    }
+    
+    fetch('/inventory/outbound', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            quantity: quantity,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Met à jour la quantité affichée dans le tableau
+            const row = document.querySelector(`tr[data-item-id="${itemId}"]`) || 
+                        document.querySelector(`tr[data-item-id='${itemId}']`);
+            if (row) {
+                const qtyCell = row.querySelector('td:nth-child(4)');
+                qtyCell.textContent = data.new_quantity;
+                
+                // Met à jour le statut si nécessaire
+                if (data.new_quantity <= 0) {
+                    row.classList.add('table-danger');
+                    row.querySelector('td:nth-child(10)').innerHTML = '<span class="badge bg-danger">Stock épuisé</span>';
+                } else if (data.new_quantity <= row.dataset.alertThreshold) {
+                    row.classList.add('table-warning');
+                    row.querySelector('td:nth-child(10)').innerHTML = '<span class="badge bg-warning">Stock faible</span>';
+                }
+            }
+            
+            // Ferme la modale
+            bootstrap.Modal.getInstance(document.getElementById('outboundStockModal')).hide();
+            
+            // Affiche une notification
+            showToast('success', 'Sortie enregistrée', `La sortie de stock a été enregistrée avec succès.`);
+            // Recharge la page après 1 seconde pour voir les changements
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showToast('error', 'Erreur', data.message || 'Erreur lors de la sortie de stock');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Erreur', 'Une erreur est survenue');
+    });
+});
+
+// Fonction utilitaire pour afficher des notifications
+function showToast(type, title, message) {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <strong>${title}</strong><br>${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    toastContainer.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Supprime le toast après disparition
+    toast.addEventListener('hidden.bs.toast', function() {
+        toast.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.position = 'fixed';
+    container.style.top = '20px';
+    container.style.right = '20px';
+    container.style.zIndex = '1100';
+    document.body.appendChild(container);
+    return container;
+}
+
+</script>
+{% endblock %}

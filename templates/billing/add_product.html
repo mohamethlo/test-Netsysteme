@@ -1,0 +1,53 @@
+{% extends "billing/base.html" %}
+
+{% block billing_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Ajouter un Produit</h1>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    <div class="row mb-3">
+    
+        <div class="col-md-12">
+            <label for="description" class="form-label">Désignation</label>
+            <input type="text" class="form-control" id="description" name="description">
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="qty" class="form-label">Quantité initiale</label>
+            <input type="number" step="1" class="form-control" id="qty" name="qty" required>
+        </div>
+        <div class="col-md-4">
+            <label for="alert_quantity" class="form-label">Niveau d'alerte</label>
+            <input type="number" step="1" class="form-control" id="alert_quantity" name="alert_quantity" value="5">
+        </div>
+        <div class="col-md-4">
+            <label for="prix" class="form-label">Prix Unitaire (Fcfa)</label>
+            <input type="number" step="1" class="form-control" id="prix" name="prix" required>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="fournisseur" class="form-label">Fournisseur</label>
+            <input type="text" class="form-control" id="fournisseur" name="fournisseur">
+        </div>
+        <div class="col-md-6">
+            <label for="img" class="form-label">Image du produit</label>
+            <input class="form-control" type="file" id="img" name="img" accept=".pdf,image/*">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <a href="{{ url_for('billing.manage_products') }}" class="btn btn-secondary">
+                <i data-feather="arrow-left"></i> Annuler
+            </a>
+        </div>
+        <div class="col-md-6 text-end">
+            <button type="submit" class="btn btn-primary">
+                <i data-feather="save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

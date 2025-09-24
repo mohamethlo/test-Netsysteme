@@ -1,0 +1,388 @@
+
+   {% extends "base.html" %}
+
+{% block title %}Pointage - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="modal fade" id="lateJustifyModal" tabindex="-1" aria-labelledby="lateJustifyModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="lateJustifyForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="lateJustifyModalLabel">Justification de retard</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="lateReason" class="form-label">Veuillez expliquer la raison de votre retard
+                                :</label>
+                            <textarea class="form-control" id="lateReason" name="lateReason" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Envoyer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="clock"></i>
+                    Pointage
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Attendance Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Pointage du jour</h5>
+                </div>
+                <div class="card-body">
+                    {% if today_attendance %}
+                    {% if today_attendance.check_in and today_attendance.check_out %}
+                    <div class="alert alert-success">
+                        <i data-feather="check-circle"></i>
+                        Journée terminée
+                    </div>
+                    <p><strong>Entrée:</strong> {{ today_attendance.check_in.strftime('%H:%M') }}</p>
+                    <p><strong>Sortie:</strong> {{ today_attendance.check_out.strftime('%H:%M') }}</p>
+                    <p><strong>Durée:</strong> {{ "%.1f"|format(today_attendance.total_hours) }}h</p>
+                    {% elif today_attendance.check_in %}
+                    <div class="alert alert-info">
+                        <i data-feather="clock"></i>
+                        En service depuis {{ today_attendance.check_in.strftime('%H:%M') }}
+                    </div>
+                    <button class="btn btn-danger" id="checkOutBtn">
+                        <i data-feather="log-out"></i>
+                        Pointer la sortie
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i data-feather="alert-circle"></i>
+                        Vous n'avez pas encore pointé aujourd'hui
+                    </div>
+                    <div id="pointage_form">
+                        <button class="btn btn-success" id="checkInBtn">
+                            <i data-feather="log-in"></i>
+                            Pointer l'entrée
+                        </button>
+                    </div>
+
+                    {% endif %}
+
+                    <div id="locationStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Votre position</h5>
+                </div>
+                <div class="card-body">
+                    <div id="map" style="height: 300px; border-radius: 0.375rem;"></div>
+                    <p class="text-muted mt-2 mb-0">
+                        <small>
+                            <i data-feather="map-pin"></i>
+                            Assurez-vous d'être dans la zone de travail autorisée
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% if presents is defined and presents is not none and absents is defined and absents is not none and retards is
+    defined and retards is not none %}
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">Présents ({{ presents|length }})</div>
+                <div class="card-body">
+                    {% if presents %}
+                    <ul class="mb-0">
+                        {% for user in presents %}
+                        <li>{{ user.prenom }} {{ user.nom }} {% if user in retards %}<span
+                                class="badge bg-warning text-dark">Retard</span>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <span class="text-muted">Aucun</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">Absents ({{ absents|length }})</div>
+                <div class="card-body">
+                    {% if absents %}
+                    <ul class="mb-0">
+                        {% for user in absents %}
+                        <li>{{ user.prenom }} {{ user.nom }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <span class="text-muted">Aucun</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">En retard ({{ retards|length }})</div>
+                <div class="card-body">
+                    {% if retards %}
+                    <ul class="mb-0">
+                        {% for user in retards %}
+                        <li>
+                            {{ user.prenom }} {{ user.nom }}
+                            {# Cherche l'Attendance du jour pour ce user #}
+                            {% set att = attendances|selectattr('user_id', 'equalto', user.id)|selectattr('date',
+                            'equalto', current_date)|first %}
+                            {% if att and att.notes %}
+                            <br>
+                            <span class="text-muted small">Justification : {{ att.notes }}</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <span class="text-muted">Aucun</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Attendance History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Historique des pointages</h5>
+                </div>
+                <div class="card-body">
+                    {% if attendances %}
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="historiqueTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Agent</th>
+                                    <th>Type</th> <!-- Nouvelle colonne -->
+                                    <th>Entrée</th>
+                                    <th>Sortie</th>
+                                    <th>Durée</th>
+                                    <th>Lieu</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in attendances %}
+                                <tr>
+                                    <td>{{ attendance.date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if attendance.user %}
+                                        {{ attendance.user.prenom }} {{ attendance.user.nom }}
+                                        {% else %}
+                                        <span class="text-muted">Inconnu</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if attendance.work_location.type == 'bureau' %}bg-primary{% else %}bg-info{% endif %}">
+                                            {{ attendance.work_location.type|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if attendance.check_in %}
+                                        {{ attendance.check_in.strftime('%H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.check_out %}
+                                        {{ attendance.check_out.strftime('%H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.total_hours > 0 %}
+                                        {{ "%.1f"|format(attendance.total_hours) }}h
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attendance.work_location %}
+                                        {{ attendance.work_location.name }}
+                                        {% else %}
+                                        <span class="text-muted">Non défini</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ get_status_badge_class(attendance.status) }}">
+                                            {{ attendance.status|replace('_', ' ')|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if pagination.pages > 1 %}
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                {% if pagination.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="{{ url_for('main.attendance', page=pagination.prev_num) }}">&laquo;</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                {% endif %}
+                                {% for p in range(1, pagination.pages + 1) %}
+                                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('main.attendance', page=p) }}">{{ p }}</a>
+                                </li>
+                                {% endfor %}
+                                {% if pagination.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="{{ url_for('main.attendance', page=pagination.next_num) }}">&raquo;</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="clock" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucun pointage enregistré</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    // Work locations data for map
+    const workLocations = {{ work_locations| tojson }};
+    const isLate = {{ is_late| tojson }};
+    const needJustification = {{ need_justification| tojson }};
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof isLate !== 'undefined' && isLate && needJustification) {
+            // Affiche la modale Bootstrap
+            const modal = new bootstrap.Modal(document.getElementById('lateJustifyModal'));
+            modal.show();
+        }
+
+        // Gestion de l'envoi du formulaire
+        const lateForm = document.getElementById('lateJustifyForm');
+        if (lateForm) {
+            lateForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const reason = document.getElementById('lateReason').value;
+                fetch('/justify_late', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason })
+                }).then(resp => resp.json()).then(data => {
+                    if (data.success) {
+                        Utils.showToast('Justification envoyée.', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('lateJustifyModal')).hide();
+                    } else {
+                        Utils.showToast('Erreur lors de l\'envoi.', 'danger');
+                    }
+                });
+            });
+        }
+    });
+</script>
+<script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+<script src="{{ url_for('static', filename='js/maps.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        const table = $('#historiqueTable').DataTable({  // Notez le L majuscule
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+            buttons: [
+                {
+                    extend: 'copy',
+                    text: '<i data-feather="copy"></i> Copier',
+                    className: 'btn btn-sm btn-primary me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'excel',
+                    text: '<i data-feather="file-text"></i> Excel',
+                    className: 'btn btn-sm btn-success me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'csv',
+                    text: '<i data-feather="file"></i> CSV',
+                    className: 'btn btn-sm btn-info me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i data-feather="file-text"></i> PDF',
+                    className: 'btn btn-sm btn-danger me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i data-feather="printer"></i> Imprimer',
+                    className: 'btn btn-sm btn-secondary',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }
+            ],
+            pageLength: 10,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { targets: 0, type: 'date-eu' }
+            ],
+            drawCallback: function() {
+                feather.replace();
+            }
+        });
+    });
+</script>
+{% endblock %}

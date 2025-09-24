@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}Suivi de {{ client.nom }}{% if client.prenom %} {{ client.prenom }}{% endif %} - {{ super() }}{%
+endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="mb-3">
+        <a href="{{ url_for('main.clients', page=page) }}" class="btn btn-link text-decoration-none">
+            <i data-feather="arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                    style="width:60px;height:60px;">
+                    <i data-feather="user" style="width:32px;height:32px;"></i>
+                </div>
+                <div>
+                    <h2 class="mb-0"> Suivi de:
+                        {{ client.nom }}{% if client.prenom %} {{ client.prenom }}{% endif %}
+                        <!-- {% if client.type_client == 'client' %}
+                            <span class="badge bg-success ms-2">Client</span>
+                        {% else %}
+                            <span class="badge bg-info ms-2">Prospect</span>
+                        {% endif %} -->
+                    </h2>
+                    <!-- {% if client.entreprise %}
+                        <div class="text-muted"><i data-feather="briefcase" style="width:16px;height:16px;"></i> {{ client.entreprise }}</div>
+                    {% endif %} -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Main content -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Actions rapides</h5>
+                    <div class="d-grid gap-2">
+                        <a href="tel:{{ client.telephone }}" class="btn btn-success">
+                            <i data-feather="phone"></i> Appeler le client
+                        </a>
+                        <button class="btn btn-warning" onclick="remindLater({{ client.id }})">
+                            <i data-feather="clock"></i> Rappeler plus tard
+                        </button>
+                        <button class="btn btn-info" onclick="sendCatalogue({{ client.id }})">
+                            <i data-feather="book-open"></i> Envoyer le catalogue
+                        </button>
+                        <button class="btn btn-primary" onclick="requestQuote({{ client.id }})">
+                            <i data-feather="file-text"></i> Demande de devis
+                        </button>
+                    </div>
+                    <div id="trackActionsResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Gestion du client</h5>
+                    {% if client.type_client == 'prospect' %}
+                    <button id="showConvertFormBtn" class="btn btn-outline-success w-100 mb-2"
+                        onclick="toggleConvertForm()" type="button">
+                        <i data-feather="user-check"></i> Convertir en client
+                    </button>
+                    <form id="convertForm" method="POST"
+                        action="{{ url_for('main.convert_client', client_id=client.id) }}" style="display:none;">
+                        <div class="mb-2">
+                            <input type="text" class="form-control" name="note" placeholder="Type d'intervention (note)"
+                                required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 mb-2">
+                            <i data-feather="user-check"></i> Valider la conversion
+                        </button>
+                        <button type="button" class="btn btn-link w-100" onclick="toggleConvertForm()">Annuler</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('main.blacklist_client', client_id=client.id) }}"
+                        onsubmit="return confirm('Blacklister ce client ?')">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i data-feather="slash"></i> Blacklister
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-2">Infos client</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li><i data-feather="user"></i> <strong>Nom :</strong> {{ client.nom }} {% if client.prenom %}{{
+                            client.prenom }}{% endif %}</li>
+                        {% if client.entreprise %}<li><i data-feather="briefcase"></i> <strong>Entreprise :</strong> {{
+                            client.entreprise }}</li>{% endif %}
+                        {% if client.email %}<li><i data-feather="mail"></i> <strong>Email :</strong> {{ client.email }}
+                        </li>{% endif %}
+                        {% if client.telephone %}<li><i data-feather="phone"></i> <strong>Tél :</strong> {{
+                            client.telephone }}</li>{% endif %}
+                        {% if client.adresse %}<li><i data-feather="map-pin"></i> <strong>Adresse :</strong> {{
+                            client.adresse }}</li>{% endif %}
+                        <li><i data-feather="tag"></i> <strong>Type :</strong>
+                            {% if client.type_client == 'client' %}
+                            <span class="badge bg-success">Client</span>
+                            {% else %}
+                            <span class="badge bg-info">Prospect</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+
+    function toggleConvertForm() {
+        const form = document.getElementById('convertForm');
+        const btn = document.getElementById('showConvertFormBtn');
+        if (form.style.display === 'none') {
+            form.style.display = '';
+            btn.style.display = 'none';
+            feather.replace();
+        } else {
+            form.style.display = 'none';
+            btn.style.display = '';
+        }
+    }
+
+    // Les fonctions remindLater, sendCatalogue, requestQuote restent inchangées
+    window.remindLater = function (clientId) {
+        document.getElementById('trackActionsResult').innerHTML = `
+        <form id="remindForm" class="mb-3">
+            <div class="mb-3">
+                <label for="remindDate" class="form-label">Date et heure du rappel (optionnel) :</label>
+                <input type="datetime-local" class="form-control" id="remindDate" name="remindDate">
+            </div>
+            <div class="mb-3">
+                <label for="remindNotes" class="form-label">Notes pour le rappel* :</label>
+                <textarea class="form-control" id="remindNotes" name="remindNotes" rows="3" required 
+                    placeholder="Ex: Le client doit nous rappeler après consultation de son équipe..."></textarea>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-warning">
+                    <i data-feather="clock"></i> Enregistrer
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('trackActionsResult').innerHTML = ''">
+                    <i data-feather="x"></i> Annuler
+                </button>
+            </div>
+        </form>
+    `;
+        feather.replace();
+
+        document.getElementById('remindForm').onsubmit = function (e) {
+            e.preventDefault();
+            const remindDate = document.getElementById('remindDate').value;
+            const remindNotes = document.getElementById('remindNotes').value;
+
+            if (!remindNotes) {
+                alert('Veuillez ajouter une note pour le rappel');
+                return;
+            }
+
+            fetch(`/client_remind/${clientId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    remind_date: remindDate || null,
+                    notes: remindNotes
+                })
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        let message = `<div class="alert alert-success">
+                    <strong>Rappel enregistré !</strong><br>
+                    ${remindDate ? 'Date: ' + new Date(remindDate).toLocaleString() + '<br>' : ''}
+                    Note: ${remindNotes}
+                </div>`;
+                        document.getElementById('trackActionsResult').innerHTML = message;
+                        setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                        document.getElementById('trackActionsResult').innerHTML =
+                            `<div class="alert alert-danger">${data.message || 'Erreur lors de l\'enregistrement du rappel.'}</div>`;
+                    }
+                });
+        }
+    }
+
+    function cancelRemindForm() {
+        document.getElementById('trackActionsResult').innerHTML = '';
+    }
+    window.sendCatalogue = function (clientId) {
+        fetch(`/client_send_catalogue/${clientId}`, { method: 'POST' })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-info">Catalogue envoyé au client !</div>';
+                } else {
+                    document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-danger">Erreur lors de l\'envoi du catalogue.</div>';
+                }
+            });
+    }
+
+    window.requestQuote = function (clientId) {
+        document.getElementById('trackActionsResult').innerHTML = `
+        <form id="quoteForm" class="mb-2">
+            <label for="quoteDetails" class="form-label">Détails de la demande :</label>
+            <textarea class="form-control mb-2" id="quoteDetails" name="quoteDetails" required></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">Envoyer la demande</button>
+        </form>
+    `;
+        document.getElementById('quoteForm').onsubmit = function (e) {
+            e.preventDefault();
+            const details = document.getElementById('quoteDetails').value;
+            fetch(`/client_request_quote/${clientId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ details: details })
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-primary">Demande de devis envoyée !</div>';
+                    } else {
+                        document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-danger">Erreur lors de l\'envoi de la demande.</div>';
+                    }
+                });
+        }
+    }
+</script>
+{% endblock %}

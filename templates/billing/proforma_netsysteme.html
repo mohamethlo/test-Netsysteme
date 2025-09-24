@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Proforma #{{ proforma.proforma_number }}</title>
+   <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+            font-size: 18px;
+            color: #000;
+            background-color: white;
+        }
+        .page {
+            page-break-after: always;
+            position: relative;
+            min-height: 29.7cm;
+            padding-bottom: 150px;
+        }
+        .last-page {
+            page-break-after: auto;
+        }
+        .header-container {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .logo-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-header img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .client-section,
+        .proforma-section,
+        .delivery-section {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding: 0 10px;
+            margin-top: 40px;
+        }
+        .client-section {
+            text-align: left;
+        }
+        .proforma-section,
+        .delivery-section {
+            text-align: right;
+        }
+        .client_header, .proforma-header, .delivery-header {
+            color: #1e3a8a;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .separator {
+            border-top: 1.5px solid #1e3a8a;
+            border-bottom: 1.5px solid #1e3a8a;
+            height: 3px;
+            margin: 5px 0 20px;
+            background-color: #1e3a8a;
+            position: relative;
+        }
+        .name {
+            font-size: 18px;
+            color: #000;
+            font-weight: bold;
+            margin-top: 0;
+            padding-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1.5px solid #1e3a8a;
+        }
+        th, td {
+            padding: 10px;
+            vertical-align: top;
+            border: 1.5px solid #1e3a8a;
+        }
+        thead th {
+            background-color: #1e3a8a;
+            color: white;
+            font-weight: bold;
+            text-align: left;
+        }
+        thead th:nth-child(2) {
+            text-align: center;
+        }
+        thead th:nth-child(3),
+        thead th:nth-child(4) {
+            text-align: right;
+        }
+        tbody td {
+            background-color: #f2d3b3;
+        }
+        tbody td:nth-child(3),
+        tbody td:nth-child(4) {
+            text-align: right;
+        }
+        .total-row {
+            font-weight: bold;
+            text-align: right;
+        }
+        .total-row td:first-child {
+            text-align: left;
+        }
+        .total-ttc {
+            color: #1e3a8a;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .delivery {
+            margin-top: 40px;
+            background-color: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .footer-notes {
+            margin-top: 40px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .notes-title {
+            color: #1e3a8a;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+        .notes-separator {
+            border-top: 1px solid #1e3a8a;
+            border-bottom: 1px solid #1e3a8a;
+            height: 3px;
+            margin: 5px 0 10px;
+            background-color: #1e3a8a;
+        }
+        .notes-content {
+            color: #000;
+        }
+        .signature-box {
+            margin-top: 60px;
+            border-top: 1px solid #000;
+            padding-top: 20px;
+        }
+        .signature-line {
+            display: inline-block;
+            width: 300px;
+            border-bottom: 1px solid #000;
+            margin: 40px 0;
+        }
+        .signature-space {
+            margin-top: 80px;
+        }
+        .cachet {
+            position: relative;
+            bottom: 180px;
+            left: 50px;
+            width: 250px;
+            opacity: 0.8;
+            z-index: 10;
+        }
+        .footer-img {
+            text-align: center;
+            margin-top: 40px;
+            object-fit: contain;
+        }
+        .footer-img img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .content-wrap {
+            margin-bottom: 200px;
+        }
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 16px; /* Taille de police réduite */
+            color: black;
+            background: #fff;
+            padding: 20px 30px 10px;
+            z-index: 10;
+        }
+        .footer h2 {
+            margin: 30px 0;
+            text-transform: uppercase;
+            font-size: 18px; /* Taille de police réduite */
+            letter-spacing: 2px;
+        }
+        .footer hr {
+            margin: 40px 0 10px;
+            border: 1px solid #ccc;
+        }
+        .footer a {
+            color: #1D4ED8;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Première page - Proforma -->
+<div class="page">
+    <div class="content-wrap">
+        <div class="logo-header">
+            <img src="{{ url_for('static', filename='img/logo_lgc.png', _external=True) }}" alt="Logo Netsys">
+        </div>
+
+        <div class="header-container">
+            <div class="client-section">
+                <div class="client_header">
+                    CLIENT
+                </div>
+                <div class="separator"></div>
+                <div class="name">
+                    {{ proforma.billing_client.company_name if proforma.billing_client.company_name else '' }}<br>
+                    {% if proforma.billing_client.company_name and proforma.billing_client.contact_name %}
+                        {{ proforma.billing_client.contact_name }}<br>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="proforma-section">
+                <div class="proforma-header">PROFORMA</div>
+                <div class="proforma-info">
+                    Numéro : #{{ proforma.proforma_number }}<br>
+                    Date : {{ proforma.date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Désignation</th>
+                <th>Qté</th>
+                <th>P. Unit</th>
+                <th>Total HT</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in proforma.items %}
+            <tr>
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ "{:,.0f}".format(item.unit_price) }} Fcfa</td>
+                <td>{{ "{:,.0f}".format(item.unit_price * item.quantity) }} Fcfa</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td></td>
+                <td></td>
+                <td>Total HT</td>
+                <td>{{ "{:,.0f}".format(proforma.total_amount()) }} Fcfa</td>
+            </tr>
+            <tr class="total-row">
+                <td></td>
+                <td></td>
+                <td>TVA ({{ "{:.0f}".format(proforma.tax_rate * 100) }}%)</td>
+                <td>{{ "{:,.0f}".format(proforma.tax_amount()) }} Fcfa</td>
+            </tr>
+            <tr class="total-row total-ttc">
+                <td></td>
+                <td></td>
+                <td>Total TTC</td>
+                <td>{{ "{:,.0f}".format(proforma.total_with_tax_and_discount()) }} Fcfa</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="signature">
+        <img src="{{ url_for('static', filename='img/CachetNetsys.PNG', _external=True) }}" alt="Signature" style="width: 150px; height: auto;">
+    </div>
+    <footer class="footer">
+        <h2>Merci pour votre confiance</h2>
+        <hr>
+        <p>Whatsapp : 77 846 16 55 / Bureau : 33 883 42 42 - 33 827 28 45</p>
+        <p>Ouest foire, route de l'aéroport Léopold Sédar Senghor, immeuble Seigneurie</p>
+        <p>R.C.SN/DKR-2010.A.7987 // NINEA: 004225464</p>
+        <p>Site web : <a href="http://www.netsys-info.com">www.netsys-info.com</a></p>
+    </footer>
+</div>
+
+<!-- Deuxième page - Conditions Commerciales -->
+<div class="page last-page">
+    <div class="content-wrap">
+        <div class="footer-notes">
+            <div class="notes-title">CONDITIONS COMMERCIALES</div>
+            <div class="notes-separator"></div>
+            <div class="notes-content">
+                <div style="text-align: center; margin: 40px 0;">
+                    <h3>BON POUR ACCORD</h3>
+                    <p>Pour un montant total de : <span style="border-bottom: 1px dotted #000; min-width: 300px; display: inline-block;">{{ "{:,.0f}".format(proforma.total_with_tax()) }} Fcfa</span></p>
+                    <p>Date: <span style="border-bottom: 1px dotted #000; min-width: 200px; display: inline-block;">{{ proforma.date.strftime('%d/%m/%Y') }}</span></p>
+                    <p>Nom: <span style="border-bottom: 1px dotted #000; min-width: 300px; display: inline-block;">&nbsp;</span></p>
+                    
+                    <div class="signature-space">
+                        <p>Signature et cachet: <span style="border-bottom: 1px dotted #000; min-width: 300px; display: inline-block;">&nbsp;</span></p>
+                        <p>Mode de règlement: <span style="border-bottom: 1px dotted #000; min-width: 300px; display: inline-block;">&nbsp;</span></p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 80px;">
+                    <p>Tous appareils vendus sont garantis pour une période de 01 an à compter de la date d'installation. Il est formellement convenu que la garantie contre les vices cachés de la chose vendue prévue par l'article 287 du COCC est exclue dans les cas suivants :</p>
+                    <ol>
+                        <li>En cas de choc ou de démontage de l'appareil et de manipulation par l'acheteur ou un tiers</li>
+                        <li>En cas de panne due à une surtension électrique</li>
+                        <li>En cas d'utilisation de l'appareil dans des conditions incompatibles avec celles prévues par le fabricant</li>
+                    </ol>
+                    <p>Un service après-vente expérimenté, compétent et dynamique est à votre disposition pour le suivi, contrôle et l'entretien de l'ensemble des appareils que nous commercialisons.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="signature">
+        <img src="{{ url_for('static', filename='img/CachetNetsys.PNG', _external=True) }}" alt="Signature" style="width: 150px; height: auto;">
+    </div>
+    <footer class="footer">
+        <h2>Merci pour votre confiance</h2>
+        <hr>
+        <p>Whatsapp : 77 846 16 55 / Bureau : 33 883 42 42 - 33 827 28 45</p>
+        <p>Ouest foire, route de l'aéroport Léopold Sédar Senghor, immeuble Seigneurie</p>
+        <p>R.C.SN/DKR-2010.A.7987 // NINEA: 004225464</p>
+        <p>Site web : <a href="http://www.netsys-info.com">www.netsys-info.com</a></p>
+    </footer>
+</div>
+
+</body>
+</html>

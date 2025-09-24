@@ -1,0 +1,599 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des utilisateurs - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="user-plus"></i>
+                    Gestion des utilisateurs
+                </h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i data-feather="plus"></i>
+                    Nouvel utilisateur
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="users" class="text-primary me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Total utilisateurs</h6>
+                            <h4 class="mb-0">{{ users|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="shield" class="text-danger me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Administrateurs</h6>
+                            <h4 class="mb-0">{{ users|selectattr('role.name', 'equalto', 'Administrateur')|list|length
+                                }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="briefcase" class="text-success me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Commerciaux</h6>
+                            <h4 class="mb-0">{{ users|selectattr('role.name', 'equalto', 'Commercial')|list|length }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="tool" class="text-warning me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Techniciens</h6>
+                            <h4 class="mb-0">{{ users|selectattr('role.name', 'equalto', 'Technicien')|list|length }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Liste des utilisateurs</h5>
+                </div>
+
+                <div class="card-body border-bottom">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i data-feather="search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchUser"
+                                    placeholder="Rechercher par nom, email, rôle...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="roleFilter">
+                                <option value="">Tous les rôles</option>
+                                <option value="Administrateur">Administrateurs</option>
+                                <option value="Commercial">Commerciaux</option>
+                                <option value="Technicien">Techniciens</option>
+                                <option value="administration">Administration</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="statusFilter">
+                                <option value="">Tous les statuts</option>
+                                <option value="active">Actifs</option>
+                                <option value="inactive">Inactifs</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if page_users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Rôle</th>
+                                    <th>Permissions</th>
+                                    <th>Dernière connexion</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2">
+                                                {{ user.prenom[0]|upper }}{{ user.nom[0]|upper }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ user.prenom }} {{ user.nom }}</strong>
+                                                <br><small class="text-muted">@{{ user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.telephone %}
+                                        {{ user.telephone }}
+                                        {% else %}
+                                        <span class="text-muted">Non renseigné</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if user.role.name == 'Administrateur' %}bg-danger{% elif user.role.name == 'Commercial' %}bg-success{% else %}bg-warning{% endif %}">
+                                            {{ user.role.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.permissions %}
+                                        {% for permission in user.permissions.split(',') %}
+                                        <span class="badge bg-secondary">{{ permission }}</span>
+                                        {% endfor %}
+                                        {% else %}
+                                        <span class="text-muted">Aucune</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.last_login %}
+                                        {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">Jamais connecté</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                        <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Voir détails"
+                                                onclick="viewUser({{ user.id }})">
+                                                <i data-feather="eye"></i>
+                                            </button>
+                                            {% if user.id != current_user.id %}
+                                            <button class="btn btn-outline-secondary" title="Modifier"
+                                                onclick="editUser({{ user.id }})">
+                                                <i data-feather="edit"></i>
+                                            </button>
+                                            {% if user.is_active %}
+                                            <form action="{{ url_for('main.deactivate_user', user_id=user.id) }}"
+                                                method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-warning" title="Désactiver"
+                                                    onclick="return confirm('Voulez-vous désactiver cet utilisateur ?')">
+                                                    <i data-feather="user-x"></i>
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <form action="{{ url_for('main.activate_user', user_id=user.id) }}"
+                                                method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-success" title="Activer"
+                                                    onclick="return confirm('Voulez-vous activer cet utilisateur ?')">
+                                                    <i data-feather="user-check"></i>
+                                                </button>
+                                            </form>
+                            
+                                            <form action="{{ url_for('main.delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-danger" title="Supprimer"
+                                                    onclick="return confirm('Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.')">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="users" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucun utilisateur enregistré</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvel utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.add_user') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="prenom" class="form-label">Prénom *</label>
+                            <input type="text" class="form-control" id="prenom" name="prenom" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nom" class="form-label">Nom *</label>
+                            <input type="text" class="form-control" id="nom" name="nom" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Nom d'utilisateur *</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="form-text">Doit être unique, sans espaces</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="telephone" name="telephone">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="site" class="form-label">Site *</label>
+                            <select class="form-select" id="site" name="site">
+                                <option value="">Sélectionner un site</option>
+                                <option value="Dakar">Dakar</option>
+                                <option value="Mbour">Mbour</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role_id" class="form-label">Rôle *</label>
+                            <select class="form-select" id="role_id" name="role_id" required
+                                onchange="updatePermissions()">
+                                <option value="">Sélectionner un rôle</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}" data-permissions="{{ role.permissions }}">{{ role.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Ajoute ceci après le champ "role_id" -->
+                        <div id="extraPermissions" class="col-12">
+                            <label class="form-label">Permissions supplémentaires</label>
+                            <!-- <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_attendance" name="permissions" value="attendance">
+                                <label class="form-check-label" for="perm_attendance">Pointage</label>
+                            </div> -->
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_interventions"
+                                    name="permissions" value="interventions">
+                                <label class="form-check-label" for="perm_interventions">Interventions</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_inventory" name="permissions"
+                                    value="inventory">
+                                <label class="form-check-label" for="perm_inventory">Stock</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_expenses" name="permissions"
+                                    value="expenses">
+                                <label class="form-check-label" for="perm_expenses">Dépenses</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_clients" name="permissions"
+                                    value="clients">
+                                <label class="form-check-label" for="perm_clients">Clients</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_installations" name="permissions" value="installations">
+                                <label class="form-check-label" for="perm_installations">Installations</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="perm_facturation" name="permissions" value="facturation">
+                                <label class="form-check-label" for="perm_facturation">Facturation</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="password" class="form-label">Mot de passe *</label>
+                            <input type="password" class="form-control" id="password" name="password" required
+                                minlength="6">
+                            <div class="form-text">Minimum 6 caractères</div>
+                        </div>
+
+                        <!-- Permissions Preview -->
+                        <div class="col-12">
+                            <label class="form-label">Permissions accordées</label>
+                            <div id="permissionsPreview" class="border rounded p-3 bg-light">
+                                <small class="text-muted">Sélectionnez un rôle pour voir les permissions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer utilisateur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails de l'utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Update permissions preview when role is selected
+    function updatePermissions() {
+        const roleSelect = document.getElementById('role_id');
+        const selectedOption = roleSelect.options[roleSelect.selectedIndex];
+        const permissions = selectedOption.dataset.permissions;
+        const preview = document.getElementById('permissionsPreview');
+        const extraPerms = document.getElementById('extraPermissions');
+
+        if (!permissions) {
+            preview.innerHTML = '<small class="text-muted">Sélectionnez un rôle pour voir les permissions</small>';
+            return;
+        }
+
+        if (permissions === 'all') {
+            preview.innerHTML = '<span class="badge bg-danger">Toutes les permissions (Administrateur)</span>';
+            extraPerms.style.display = 'none';
+            return;
+        } else {
+            extraPerms.style.display = '';
+        }
+
+        const permissionList = permissions.split(',');
+        const permissionNames = {
+            'attendance': 'Pointage',
+            'interventions': 'Interventions',
+            'inventory': 'Stock',
+            'expenses': 'Dépenses',
+            'clients': 'Clients'
+        };
+
+        const badges = permissionList.map(perm =>
+            `<span class="badge bg-secondary me-1">${permissionNames[perm] || perm}</span>`
+        ).join('');
+
+        preview.innerHTML = badges;
+    }
+
+    // User actions
+    function viewUser(userId) {
+        // Load user details (would typically fetch from server)
+        fetch(`/user/${userId}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('userDetailsContent').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+                modal.show();
+            });
+    }
+
+    function editUser(userId) {
+        // Edit user functionality
+        window.location.href = `/edit_user/${userId}`;
+    }
+
+    function toggleUserStatus(userId, isActive) {
+        const action = isActive ? 'désactiver' : 'activer';
+        if (confirm(`Voulez-vous ${action} cet utilisateur ?`)) {
+            // Toggle user status
+            console.log('Toggle user status:', userId, !isActive);
+        }
+    }
+
+    // Password strength indicator
+    document.getElementById('password').addEventListener('input', function () {
+        const password = this.value;
+        const minLength = password.length >= 6;
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /\d/.test(password);
+
+        let strength = 'Faible';
+        let className = 'text-danger';
+
+        if (minLength && hasLetter && hasNumber) {
+            strength = 'Fort';
+            className = 'text-success';
+        } else if (minLength && (hasLetter || hasNumber)) {
+            strength = 'Moyen';
+            className = 'text-warning';
+        }
+
+        // You could add a strength indicator here
+    });
+
+    // Username validation
+    document.getElementById('username').addEventListener('input', function () {
+        this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchUser');
+        const roleFilter = document.getElementById('roleFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const userRows = document.querySelectorAll('table tbody tr');
+
+
+        function filterUsers() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedRole = roleFilter.value;  // Remove toLowerCase() here
+            const selectedStatus = statusFilter.value;
+
+            userRows.forEach(row => {
+                const userData = {
+                    name: row.querySelector('strong').textContent.toLowerCase(),
+                    email: row.querySelector('td:nth-child(2)').textContent.toLowerCase(),
+                    role: row.querySelector('.badge').textContent.trim(), // Remove toLowerCase() and add trim()
+                    status: row.querySelector('td:nth-child(7) .badge').textContent.toLowerCase()
+                };
+
+                const matchesSearch =
+                    userData.name.includes(searchTerm) ||
+                    userData.email.includes(searchTerm) ||
+                    userData.role.toLowerCase().includes(searchTerm);
+
+                const matchesRole = !selectedRole || userData.role === selectedRole;  // Direct comparison
+
+                const matchesStatus = !selectedStatus ||
+                    (selectedStatus === 'active' && userData.status === 'actif') ||
+                    (selectedStatus === 'inactive' && userData.status === 'inactif');
+
+                row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+            });
+
+            updateNoResults();
+        }
+
+        function updateNoResults() {
+            const hasVisibleRows = Array.from(userRows).some(row => row.style.display !== 'none');
+            const noResultsDiv = document.querySelector('.no-results');
+
+            if (!hasVisibleRows) {
+                if (!noResultsDiv) {
+                    const div = document.createElement('div');
+                    div.className = 'no-results text-center py-4';
+                    div.innerHTML = `
+                    <i data-feather="search" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <p class="text-muted">Aucun utilisateur trouvé</p>
+                `;
+                    document.querySelector('table').parentNode.appendChild(div);
+                    feather.replace();
+                }
+                document.querySelector('table').style.display = 'none';
+            } else {
+                if (noResultsDiv) noResultsDiv.remove();
+                document.querySelector('table').style.display = '';
+            }
+        }
+
+        // Add event listeners
+        searchInput.addEventListener('input', filterUsers);
+        roleFilter.addEventListener('change', filterUsers);
+        statusFilter.addEventListener('change', filterUsers);
+    });
+
+
+
+    $(document).ready(function() {
+    const table = $('#usersTable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+        },
+        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+        buttons: [
+            {
+                extend: 'copy',
+                text: '<i data-feather="copy"></i> Copier',
+                className: 'btn btn-sm btn-primary me-1',
+                exportOptions: {
+                    columns: ':not(:last-child)' // Exclure la colonne Actions
+                }
+            },
+            {
+                extend: 'excel',
+                text: '<i data-feather="file-text"></i> Excel',
+                className: 'btn btn-sm btn-success me-1',
+                exportOptions: {
+                    columns: ':not(:last-child)'
+                }
+            },
+            {
+                extend: 'csv',
+                text: '<i data-feather="file"></i> CSV',
+                className: 'btn btn-sm btn-info me-1',
+                exportOptions: {
+                    columns: ':not(:last-child)'
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i data-feather="file-text"></i> PDF',
+                className: 'btn btn-sm btn-danger me-1',
+                exportOptions: {
+                    columns: ':not(:last-child)'
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i data-feather="printer"></i> Imprimer',
+                className: 'btn btn-sm btn-secondary',
+                exportOptions: {
+                    columns: ':not(:last-child)'
+                }
+            }
+        ],
+        pageLength: 10,
+        order: [[0, 'desc']],
+        columnDefs: [
+            {
+                targets: -1,
+                orderable: false,
+                searchable: false
+            }
+        ],
+        drawCallback: function() {
+            // Réinitialiser les icônes Feather après chaque redraw
+            feather.replace();
+        }
+    });
+
+    // Intégration avec les filtres existants
+    $('#searchUser, #roleFilter, #statusFilter').on('keyup change', function() {
+        table.draw();
+    });
+});
+</script>
+{% endblock %}

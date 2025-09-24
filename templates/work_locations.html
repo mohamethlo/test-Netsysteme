@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Zones de travail{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Zones de travail</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLocationModal">
+                    <i data-feather="plus"></i>
+                    Ajouter une zone
+                </button>
+            </div>
+
+            {% if locations %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Type</th>
+                                    <th>Adresse</th>
+                                    <th>Coordonnées</th>
+                                    <th>Rayon (m)</th>
+                                    <th>Créée le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for location in locations %}
+                                <tr>
+                                    <td><strong>{{ location.name }}</strong></td>
+                                    <td>
+                                        <span class="badge {% if location.type == 'bureau' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                            {{ location.type|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>{{ location.address or 'Non spécifiée' }}</td>
+                                    <td>
+                                        <small class="text-muted">
+                                            Lat: {{ "%.6f"|format(location.latitude) }}<br>
+                                            Lng: {{ "%.6f"|format(location.longitude) }}
+                                        </small>
+                                    </td>
+                                    <td>{{ location.radius }}</td>
+                                    <td>{{ location.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewOnMap({{ location.latitude }}, {{ location.longitude }})">
+                                            <i data-feather="map-pin"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i data-feather="map-pin" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <h5 class="text-muted">Aucune zone de travail définie</h5>
+                    <p class="text-muted">Ajoutez les coordonnées de votre entreprise pour activer le système de pointage géolocalisé.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLocationModal">
+                        <i data-feather="plus"></i>
+                        Ajouter ma première zone
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajout Zone -->
+<div class="modal fade" id="addLocationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter une zone de travail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.add_work_location') }}">
+                {{ form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder="Ex: Siège social") }}
+                            </div>
+                            <!-- Ajoute ce bloc dans le formulaire du modal d'ajout -->
+                            <div class="mb-3">
+                                <label for="type" class="form-label">Type de zone *</label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="bureau" selected>Bureau</option>
+                                    <option value="chantier">Chantier</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.radius.label(class="form-label") }}
+                                {{ form.radius(class="form-control", value="100") }}
+                                <div class="form-text">Rayon en mètres dans lequel les employés peuvent pointer</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control", placeholder="Adresse complète de votre entreprise") }}
+                        <div class="form-text">L'adresse complète aide à identifier la zone</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.latitude.label(class="form-label") }}
+                                {{ form.latitude(class="form-control", step="any", placeholder="Ex: 48.8566") }}
+                                <div class="form-text">Latitude de votre entreprise</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.longitude.label(class="form-label") }}
+                                {{ form.longitude(class="form-control", step="any", placeholder="Ex: 2.3522") }}
+                                <div class="form-text">Longitude de votre entreprise</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i data-feather="info"></i> Comment obtenir les coordonnées ?</h6>
+                        <p class="mb-2">Vous pouvez obtenir les coordonnées de votre entreprise de plusieurs façons :</p>
+                        <ul class="mb-0">
+                            <li><strong>Google Maps :</strong> Clic droit sur votre adresse → "Quoi de neuf ici ?" → les coordonnées s'affichent</li>
+                            <li><strong>GPS :</strong> Utilisez votre smartphone à l'emplacement de votre entreprise</li>
+                            <li><strong>Recherche en ligne :</strong> Tapez "coordonnées GPS [votre adresse]" dans Google</li>
+                        </ul>
+                    </div>
+
+                    <div id="previewMap" style="height: 200px; border-radius: 8px;" class="d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="previewLocation()">
+                        <i data-feather="map"></i> Prévisualiser
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewOnMap(lat, lng) {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+}
+
+function previewLocation() {
+    const lat = document.getElementById('latitude').value;
+    const lng = document.getElementById('longitude').value;
+    
+    if (lat && lng) {
+        const mapDiv = document.getElementById('previewMap');
+        mapDiv.classList.remove('d-none');
+        
+        // Simple preview with Google Maps embed
+        mapDiv.innerHTML = `
+            <iframe 
+                width="100%" 
+                height="200" 
+                frameborder="0" 
+                style="border:0; border-radius: 8px;" 
+                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dw&q=${lat},${lng}&zoom=16"
+                allowfullscreen>
+            </iframe>
+        `;
+    } else {
+        alert('Veuillez saisir les coordonnées avant de prévisualiser');
+    }
+}
+</script>
+{% endblock %}

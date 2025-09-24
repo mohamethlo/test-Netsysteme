@@ -1,0 +1,92 @@
+id,user_id,message,created_at,is_read
+1,3,Nouvelle intervention planifiée pour le 2025-06-12T13:19,2025-06-12 11:20:28,0
+2,1,"Le prospect NDIAYE ADJI a été converti en client par Administrateur Système (Tél: N/A).
+ Type d'intervention : installation caméra de surveillance",2025-06-17 12:04:44,0
+3,6,"Le prospect NDIAYE ADJI a été converti en client par Administrateur Système (Tél: N/A).
+ Type d'intervention : installation caméra de surveillance",2025-06-17 12:04:44,0
+4,1,"Le prospect  DIOP ALADJI a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Maintenance",2025-06-17 16:05:29,0
+5,6,"Le prospect  DIOP ALADJI a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Maintenance",2025-06-17 16:05:29,0
+6,8,"Le prospect  DIOP ALADJI a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Maintenance",2025-06-17 16:05:29,0
+7,1,"Le prospect THIAM AMATH a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : installation",2025-06-17 16:08:10,0
+8,6,"Le prospect THIAM AMATH a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : installation",2025-06-17 16:08:10,0
+9,8,"Le prospect THIAM AMATH a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : installation",2025-06-17 16:08:10,0
+10,1,"Le prospect DIBA                                                         BAYE                                                         a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : test",2025-06-17 16:10:05,0
+11,6,"Le prospect DIBA                                                         BAYE                                                         a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : test",2025-06-17 16:10:05,0
+12,8,"Le prospect DIBA                                                         BAYE                                                         a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : test",2025-06-17 16:10:05,0
+13,1,"Le prospect GUEYE                                                        BOUBACAR                                                     a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Un autre test",2025-06-17 16:11:28,0
+14,6,"Le prospect GUEYE                                                        BOUBACAR                                                     a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Un autre test",2025-06-17 16:11:28,0
+15,8,"Le prospect GUEYE                                                        BOUBACAR                                                     a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Un autre test",2025-06-17 16:11:28,0
+16,1,"Le prospect THIAM                                                        MATY                                                         a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Un autre test",2025-06-17 16:20:10,0
+17,6,"Le prospect THIAM                                                        MATY                                                         a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Un autre test",2025-06-17 16:20:10,0
+18,8,"Le prospect THIAM                                                        MATY                                                         a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : Un autre test",2025-06-17 16:20:10,0
+19,1,Nouveau justificatif de retard de Système Admin,2025-06-17 16:26:42,0
+20,6,Nouveau justificatif de retard de Système Admin,2025-06-17 16:26:42,0
+21,8,Nouveau justificatif de retard de Système Admin,2025-06-17 16:26:42,0
+22,1,"Le prospect NDIAYE BOUNAMA a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : J'effectue des test en local",2025-06-17 16:34:10,0
+23,6,"Le prospect NDIAYE BOUNAMA a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : J'effectue des test en local",2025-06-17 16:34:10,0
+24,8,"Le prospect NDIAYE BOUNAMA a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : J'effectue des test en local",2025-06-17 16:34:10,0
+25,1,"Le prospect SENEBA DIENG a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : J'effectue des test en local",2025-06-17 16:44:05,1
+26,6,"Le prospect SENEBA DIENG a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : J'effectue des test en local",2025-06-17 16:44:05,0
+27,8,"Le prospect SENEBA DIENG a été converti en client par Admin Système (Tél: N/A).
+ Type d'intervention : J'effectue des test en local",2025-06-17 16:44:05,0
+28,3,Nouvelle intervention planifiée pour le 2025-06-25T13:07,2025-06-25 11:07:46,0
+29,3,Nouvelle intervention planifiée pour le 2025-06-25T17:44,2025-06-25 15:44:50,0
+30,3,Nouvelle intervention planifiée pour le 2025-06-27T09:26,2025-06-27 09:26:35,0
+31,1,Nouveau justificatif de retard de Système Admin (Chantier - Grand Yoff) Je viens d'ajouter le lieu et le nom de pointage dans le rapport,2025-06-28 10:52:40,0
+32,6,Nouveau justificatif de retard de Système Admin (Chantier - Grand Yoff) Je viens d'ajouter le lieu et le nom de pointage dans le rapport,2025-06-28 10:52:40,0
+33,8,Nouveau justificatif de retard de Système Admin (Chantier - Grand Yoff) Je viens d'ajouter le lieu et le nom de pointage dans le rapport,2025-06-28 10:52:40,0
+34,1,Nouveau justificatif de retard de Yves Manga (Chantier - Grand Yoff) : Télétravail,2025-06-28 11:27:54,0
+35,6,Nouveau justificatif de retard de Yves Manga (Chantier - Grand Yoff) : Télétravail,2025-06-28 11:27:54,0
+36,8,Nouveau justificatif de retard de Yves Manga (Chantier - Grand Yoff) : Télétravail,2025-06-28 11:27:54,0
+37,1,"Le prospect DIATTA ABDOULAYE MBAYE a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : installation caméra de surveillance",2025-07-02 10:22:11,0
+38,1,"Le prospect MAMOUR DIENG a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : J'effectue des test en local",2025-07-02 10:27:24,0
+39,1,"Le prospect ROKHAYA GUEYE  a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : J'effectue des test en local",2025-07-02 11:46:10,0
+40,1,"Le prospect BA                                                           IBRAHIMA                                                     a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Un autre test",2025-07-02 12:34:32,0
+41,1,"Le prospect DIAGNE IBRAHIMA a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : test",2025-07-02 12:41:42,0
+42,1,"Le prospect MAMADOU KANTE a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Maintenance",2025-07-02 12:50:35,0
+43,1,"Le prospect MBAYE                                                        KHADY                                                        a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : installation",2025-07-02 12:55:28,0
+44,1,"Le prospect leur leur a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : J'effectue des test en local",2025-07-02 12:59:16,0
+45,1,"Le prospect lui lui a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Un autre test",2025-07-02 13:03:46,0
+46,1,"Le prospect DIARRA                                                       MARIAMA SODA                                                 a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Maintenance",2025-07-02 13:05:41,0
+47,1,"Le prospect moi moi a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Maintenance",2025-07-02 13:09:13,0
+48,1,"Le prospect ADJI NDIAYE a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Un autre test",2025-07-02 13:18:39,0
+49,1,"Le prospect ABDOULAYE                                                    NGOM                                                         a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : J'effectue des test en local",2025-07-02 13:23:48,0
+50,1,"Le prospect EL HADJI  NDAO a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Un autre test",2025-07-02 13:32:17,0
+51,1,"Le prospect MALAO NDIAYE a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : Maintenance",2025-07-02 14:37:17,0
+52,1,"Le prospect MODOU NDIAYE a été converti en client par Admin Système (Tél: +221775561233).
+ Type d'intervention : J'effectue des test en local",2025-07-02 16:27:14,0

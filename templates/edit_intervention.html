@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier Intervention - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12 col-lg-10 mx-auto">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>
+                        <i data-feather="edit"></i>
+                        Modifier / Terminer l'intervention
+                    </h4>
+                </div>
+                <form method="POST" action="{{ url_for('main.edit_intervention', id=intervention.id) }}">
+                    {{ form.hidden_tag() }}
+                    {% for field, errors in form.errors.items() %}
+                    <div class="alert alert-danger">
+                        {{ form[field].label.text }} : {{ errors[0] }}
+                    </div>
+                    {% endfor %}
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- <div class="col-md-6">
+                                <label for="titre" class="form-label">Titre *</label>
+                                <input type="text" class="form-control" id="titre" name="titre" value="{{ intervention.titre }}" required>
+                            </div> -->
+                            <div class="col-md-6">
+                                <label for="priorite" class="form-label">Priorité</label>
+                                <select class="form-select" id="priorite" name="priorite">
+                                    <option value="basse" {% if intervention.priorite=='basse' %}selected{% endif %}>
+                                        Basse</option>
+                                    <option value="normale" {% if intervention.priorite=='normale' %}selected{% endif
+                                        %}>Normale</option>
+                                    <option value="haute" {% if intervention.priorite=='haute' %}selected{% endif %}>
+                                        Haute</option>
+                                    <option value="urgente" {% if intervention.priorite=='urgente' %}selected{% endif
+                                        %}>Urgente</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description"
+                                    rows="3">{{ intervention.description or '' }}</textarea>
+                            </div>
+                            <!--  <div class="col-md-6">
+                                <label for="client_id" class="form-label">Client *</label>
+                                <select class="form-select" id="client_id" name="client_id" required disabled>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}" {% if intervention.client_id == client.id %}selected{% endif %}>
+                                        {{ client.nom }}{% if client.prenom %} {{ client.prenom }}{% endif %}{% if client.entreprise %} - {{ client.entreprise }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                
+                                <input type="hidden" name="client_id" value="{{ intervention.client_id }}">
+                            </div> -->
+
+
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="client_libre_toggle"
+                                        name="client_libre_toggle" {% if intervention.client_id is none %}checked{%
+                                        endif %} disabled>
+                                    <label class="form-check-label" for="client_libre_toggle">
+                                        Client non enregistré
+                                    </label>
+                                </div>
+                            </div>
+
+                            {% if intervention.client_id %}
+                            <div id="client_existant">
+                                <div class="col-md-12">
+                                    <label class="form-label">Client</label>
+                                    <div class="form-control bg-light">
+                                        {{ intervention.client.nom }}
+                                        {% if intervention.client.prenom %} {{ intervention.client.prenom }}{% endif %}
+                                        {% if intervention.client.entreprise %} - {{ intervention.client.entreprise }}{%
+                                        endif %}
+                                    </div>
+                                    <input type="hidden" name="client_id" value="{{ intervention.client_id }}">
+                                </div>
+                            </div>
+                            {% else %}
+                            <div id="client_libre">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom du client</label>
+                                        <div class="form-control bg-light">{{ intervention.client_libre_nom or '' }}
+                                        </div>
+                                        <input type="hidden" name="client_libre_nom"
+                                            value="{{ intervention.client_libre_nom or '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Téléphone</label>
+                                        <div class="form-control bg-light">{{ intervention.client_libre_telephone or ''
+                                            }}</div>
+                                        <input type="hidden" name="client_libre_telephone"
+                                            value="{{ intervention.client_libre_telephone or '' }}">
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="col-md-6">
+                                <label for="technicien_id" class="form-label">Technicien</label>
+                                <select class="form-select" id="technicien_id" name="technicien_id" disabled>
+                                    <option value="">Non assigné</option>
+                                    {% for technician in technicians %}
+                                    <option value="{{ technician.id }}" {% if intervention.technicien_id==technician.id
+                                        %}selected{% endif %}>
+                                        {{ technician.prenom }} {{ technician.nom }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <!-- Champ caché pour que la valeur soit bien envoyée au POST -->
+                                <input type="hidden" name="technicien_id" value="{{ intervention.technicien_id }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Autres intervenants</label>
+                                <div class="form-control" style="height:auto;">
+                                    {% for user in technicians %}
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="autres_intervenants"
+                                            id="autre_{{ user.id }}" value="{{ user.id }}" {% if user in
+                                            intervention.autres_intervenants %}checked{% endif %}>
+                                        <label class="form-check-label" for="autre_{{ user.id }}">{{ user.prenom }} {{
+                                            user.nom }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_prevue" class="form-label">Date prévue *</label>
+                                <input type="datetime-local" class="form-control" id="date_prevue" name="date_prevue"
+                                    value="{{ intervention.date_prevue.strftime('%Y-%m-%dT%H:%M') if intervention.date_prevue else '' }}"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_realisation" class="form-label">Date de réalisation</label>
+                                <input type="datetime-local" class="form-control" id="date_realisation"
+                                    name="date_realisation"
+                                    value="{{ intervention.date_realisation.strftime('%Y-%m-%dT%H:%M') if intervention.date_realisation else '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duree_estimee" class="form-label">Durée estimée (minutes)</label>
+                                <input type="number" class="form-control" id="duree_estimee" name="duree_estimee"
+                                    min="1" step="1" value="{{ intervention.duree_estimee or '' }}">
+                            </div>
+                            <!-- <div class="col-md-6">
+                                <label for="duree_reelle" class="form-label">Durée réelle (minutes)</label>
+                                <input type="number" class="form-control" id="duree_reelle" name="duree_reelle" min="1" step="1"
+                                    value="{{ intervention.duree_reelle or '' }}">
+                            </div> -->
+                            <div class="col-12">
+                                <label for="adresse" class="form-label">Adresse</label>
+                                <textarea class="form-control" id="adresse" name="adresse"
+                                    rows="2">{{ intervention.adresse or '' }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="type_intervention" class="form-label">Type d'intervention *</label>
+                                <select class="form-select" id="type_intervention" name="type_intervention" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="Installation" {% if intervention.type_intervention=='Installation'
+                                        %}selected{% endif %}>Installation</option>
+                                    <option value="Maintenance" {% if intervention.type_intervention=='Maintenance'
+                                        %}selected{% endif %}>Maintenance</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="societe" class="form-label">Société</label>
+                                <input type="text" class="form-control" id="societe" name="societe"
+                                    value="{{ intervention.societe or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="representant" class="form-label">Représentant</label>
+                                <input type="text" class="form-control" id="representant" name="representant"
+                                    value="{{ intervention.representant or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telephone" class="form-label">Téléphone</label>
+                                <input type="text" class="form-control" id="telephone" name="telephone"
+                                    value="{{ intervention.telephone or '' }}">
+                            </div>
+                            <div class="col-12">
+                                <label for="taches_realisees" class="form-label">Tâches réalisées</label>
+                                <textarea class="form-control" id="taches_realisees" name="taches_realisees"
+                                    rows="2">{{ intervention.taches_realisees or '' }}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="heure_arrivee" class="form-label">Heure d'arrivée</label>
+                                <input type="time" class="form-control" id="heure_arrivee" name="heure_arrivee"
+                                    value="{{ intervention.heure_arrivee.strftime('%H:%M') if intervention.heure_arrivee else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="heure_depart" class="form-label">Heure de départ</label>
+                                <input type="time" class="form-control" id="heure_depart" name="heure_depart"  readonly
+                                    value="{{ intervention.heure_depart.strftime('%H:%M') if intervention.heure_depart else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="duree_intervention" class="form-label">Durée intervention</label>
+                                <input type="time" class="form-control" id="duree_intervention"
+                                    name="duree_intervention"
+                                    value="{{ intervention.duree_intervention.strftime('%H:%M') if intervention.duree_intervention else '' }}">
+                            </div>
+                            <div class="col-12">
+                                <label for="observations_technicien" class="form-label">Observations technicien</label>
+                                <textarea class="form-control" id="observations_technicien"
+                                    name="observations_technicien"
+                                    rows="2">{{ intervention.observations_technicien or '' }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_dvr_nvr" class="form-label">ID DVR/NVR</label>
+                                <input type="text" class="form-control" id="id_dvr_nvr" name="id_dvr_nvr"
+                                    value="{{ intervention.id_dvr_nvr or '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="mdp_dvr_nvr" class="form-label">MDP DVR/NVR</label>
+                                <input type="text" class="form-control" id="mdp_dvr_nvr" name="mdp_dvr_nvr"
+                                    value="{{ intervention.mdp_dvr_nvr or '' }}">
+                            </div>
+                            <!-- Matériels à utilisés -->
+                            <div class="col-12">
+                                <label class="form-label">Matériels requis pour cette intervention</label>
+                                {% if intervention.materiels %}
+                                <ul class="list-group mb-3">
+                                    {% for mat in intervention.materiels %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ mat.article.name }}
+                                        <span class="badge bg-primary rounded-pill">{{ mat.quantite }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <p class="text-muted">Aucun matériel requis pour cette intervention.</p>
+                                {% endif %}
+                            </div>
+                            <!--  <div class="col-md-6">
+                                <label for="qr_code_path" class="form-label">QR Code (chemin)</label>
+                                <input type="text" class="form-control" id="qr_code_path" name="qr_code_path" value="{{ intervention.qr_code_path or '' }}">
+                            </div> -->
+                            <div class="col-12">
+                                <label>Signature du client</label>
+                                <canvas id="signature-pad" width="400" height="150"
+                                    style="border:1px solid #ccc"></canvas>
+                                <input type="hidden" name="signature_data" id="signature_data"
+                                    value="{{ intervention.signature_data or '' }}">
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2"
+                                    onclick="clearSignature()">Effacer</button>
+                                {% if intervention.signature_data %}
+                                <div class="mt-2">
+                                    <label>Signature enregistrée :</label><br>
+                                    <img src="{{ intervention.signature_data }}" alt="Signature"
+                                        style="border:1px solid #ccc;max-width:400px;">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <button type="submit" class="btn btn-success">Enregistrer / Terminer</button>
+                        <a href="{{ url_for('main.interventions') }}" class="btn btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Signature Pad JS -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
+
+<script>
+    // Initialisation du pad de signature
+    let canvas = document.getElementById('signature-pad');
+    let signaturePad = new SignaturePad(canvas);
+
+    function clearSignature() {
+        signaturePad.clear();
+    }
+
+    // Détection du début de signature
+    canvas.addEventListener('pointerdown', function() {
+        // Remplir l'heure de départ seulement si elle est vide
+        if (!document.getElementById('heure_depart').value) {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('heure_depart').value = `${hours}:${minutes}`;
+            
+            // Mettre à jour la durée si l'heure d'arrivée est déjà renseignée
+            updateDureeIntervention();
+        }
+    });
+
+    // Gestion de la soumission du formulaire
+    document.querySelector('form').addEventListener('submit', function(e) {
+        document.getElementById('signature_data').value = signaturePad.isEmpty() ? "" : signaturePad.toDataURL();
+    });
+
+    // Fonction de calcul de durée (existante)
+    function updateDureeIntervention() {
+        const heureArrivee = document.getElementById('heure_arrivee').value;
+        const heureDepart = document.getElementById('heure_depart').value;
+        const dureeInput = document.getElementById('duree_intervention');
+        
+        if (heureArrivee && heureDepart) {
+            const [hA, mA] = heureArrivee.split(':').map(Number);
+            const [hD, mD] = heureDepart.split(':').map(Number);
+            let start = new Date(0, 0, 0, hA, mA, 0);
+            let end = new Date(0, 0, 0, hD, mD, 0);
+            
+            if (end < start) {
+                end.setDate(end.getDate() + 1);
+            }
+            
+            let diff = new Date(end - start);
+            let hours = String(diff.getUTCHours()).padStart(2, '0');
+            let minutes = String(diff.getUTCMinutes()).padStart(2, '0');
+            dureeInput.value = `${hours}:${minutes}`;
+        } else {
+            dureeInput.value = '';
+        }
+    }
+
+    // Écouteurs pour le calcul de durée
+    document.getElementById('heure_arrivee').addEventListener('change', updateDureeIntervention);
+    document.getElementById('heure_depart').addEventListener('change', updateDureeIntervention);
+</script>
+{% endblock %}

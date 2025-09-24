@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}Interventions - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="tool"></i>
+                    Interventions
+                </h2>
+                {% if current_user.role.name in ['Technicien', 'Administrateur', 'administration'] %}
+                <button class="btn btn-primary shadow" data-bs-toggle="modal" data-bs-target="#addInterventionModal">
+                    <i data-feather="plus"></i>
+                    Nouvelle intervention
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('main.interventions') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i data-feather="search"></i>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Rechercher..." name="q"
+                                    value="{{ request.args.get('q', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="status">
+                                <option value="">Tous les statuts</option>
+                                <option value="en_attente" {% if request.args.get('status')=='en_attente' %}selected{%
+                                    endif %}>En attente</option>
+                                <option value="en_cours" {% if request.args.get('status')=='en_cours' %}selected{% endif
+                                    %}>En cours</option>
+                                <option value="terminee" {% if request.args.get('status')=='terminee' %}selected{% endif
+                                    %}>Terminée</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="priority">
+                                <option value="">Toutes les priorités</option>
+                                <option value="basse" {% if request.args.get('priority')=='basse' %}selected{% endif %}>
+                                    Basse</option>
+                                <option value="normale" {% if request.args.get('priority')=='normale' %}selected{% endif
+                                    %}>Normale</option>
+                                <option value="haute" {% if request.args.get('priority')=='haute' %}selected{% endif %}>
+                                    Haute</option>
+                                <option value="urgente" {% if request.args.get('priority')=='urgente' %}selected{% endif
+                                    %}>Urgente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="type">
+                                <option value="">Tous les types</option>
+                                <option value="Installation" {% if request.args.get('type')=='Installation' %}selected{%
+                                    endif %}>Installation</option>
+                                <option value="Maintenance" {% if request.args.get('type')=='Maintenance' %}selected{%
+                                    endif %}>Maintenance</option>
+                                <option value="Dépannage" {% if request.args.get('type')=='Dépannage' %}selected{% endif
+                                    %}>Dépannage</option>
+                                <!-- Ajoutez les autres types... -->
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="filter"></i> Filtrer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Interventions List -->
+    <div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-light border-0 rounded-top-4">
+                <h5 class="mb-0 fw-bold">Liste des interventions</h5>
+            </div>
+            <div class="card-body">
+                {% if interventions %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle"  id="interventionsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Client</th>
+                                <th>Technicien</th>
+                                <th>Date prévue</th>
+                                <th>Durée</th>
+                                <th>Priorité</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for intervention in interventions %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">{{ intervention.date_prevue.strftime('%d/%m/%Y %H:%M')}}</small>
+                                </td>
+                                <td>
+                                    {% if intervention.description %}
+                                        <small class="text-muted">{{ intervention.description[:50] }}{% if intervention.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if intervention.client_id %}
+                                        {{ intervention.client.nom }}
+                                        {% if intervention.client.prenom %}
+                                            {{ intervention.client.prenom }}
+                                        {% endif %}
+                                        {% if intervention.client.entreprise %}
+                                            <br><small class="text-muted">{{ intervention.client.entreprise }}</small>
+                                        {% endif %}
+                                        {% if intervention.client.converted_by %}
+                                            <br>
+                                            <span class="badge bg-info text-dark mt-1" title="Commercial ayant converti">
+                                                <i data-feather="user-check" style="width:14px;height:14px;"></i>
+                                                Commercial: {{ intervention.client.converted_by.prenom }} {{ intervention.client.converted_by.nom }}
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <strong>{{ intervention.client_libre_nom }}</strong>
+                                        {% if intervention.client_libre_telephone %}
+                                            <br><small class="text-muted">Tél: {{ intervention.client_libre_telephone }}</small>
+                                        {% endif %}
+                                        <span class="badge bg-secondary">Client non enregistré</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if intervention.technicien %}
+                                        {{ intervention.technicien.prenom }} {{ intervention.technicien.nom }}
+                                    {% else %}
+                                        <span class="text-muted">Non assigné</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ intervention.date_prevue.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    {% if intervention.duree_estimee %}
+                                        {{ (intervention.duree_estimee // 60) }}h{{ (intervention.duree_estimee % 60) }}m
+                                    {% else %}
+                                        <span class="text-muted">Non définie</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {{ get_priority_badge_class(intervention.priorite) }}">
+                                        {{ intervention.priorite|title }}
+                                    </span>
+                                </td>
+                                <td>{{ intervention.type_intervention or '-' }}</td>
+                                <td>
+                                    <span class="badge {{ get_status_badge_class(intervention.statut) }}">
+                                        {{ intervention.statut|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a class="btn btn-outline-primary" title="Voir détails"
+                                            href="{{ url_for('main.generate_fiche_pdf', id=intervention.id) }}">
+                                            <i data-feather="eye"></i>
+                                        </a> 
+                                        {% if current_user.role.name in ['Technicien', 'Administrateur', 'administration'] %}
+                                            {% if intervention.statut == 'terminee' %}
+                                                <a target="_blank" class="btn btn-outline-success" title="Fiche d'intervention"
+                                                    href="{{ url_for('main.export_pdf', id=intervention.id) }}">
+                                                    <i data-feather="file-text"></i>
+                                                </a>
+                                            {% else %}
+                                                <a class="btn btn-outline-secondary" title="Modifier"
+                                                    href="{{ url_for('main.edit_intervention', id=intervention.id) }}">
+                                                    <i data-feather="edit"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="tool" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <p class="text-muted">Aucune intervention enregistrée</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Add Intervention Modal -->
+{% if current_user.role.name in ['Technicien', 'Administrateur', 'administration'] %}
+<div class="modal fade" id="addInterventionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow rounded-4">
+            <form action="{{ url_for('main.add_intervention') }}" method="POST">
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title">
+                        <i data-feather="plus-circle" class="me-2"></i>Nouvelle intervention
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <!--  <div class="col-md-8">
+                            <label for="titre" class="form-label fw-semibold">Titre <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titre" name="titre" required>
+                        </div> -->
+                        <div class="col-md-4">
+                            <label for="priorite" class="form-label fw-semibold">Priorité</label>
+                            <select class="form-select" id="priorite" name="priorite">
+                                <option value="basse">Basse</option>
+                                <option value="normale" selected>Normale</option>
+                                <option value="haute">Haute</option>
+                                <option value="urgente">Urgente</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="description" class="form-label fw-semibold">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                        </div>
+                        <!-- <div class="col-md-6">
+                            <label for="client_id" class="form-label fw-semibold">Client <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Sélectionner un client</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">
+                                    {{ client.nom }}{% if client.prenom %} {{ client.prenom }}{% endif %}{% if
+                                    client.entreprise %} - {{ client.entreprise }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div> -->
+
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="client_libre_toggle"
+                                    name="client_libre_toggle">
+                                <label class="form-check-label" for="client_libre_toggle">
+                                    Client non enregistré
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="client_existant">
+                            <div class="col-md-12">
+                                <label for="client_id" class="form-label fw-semibold">Client existant</label>
+                                <select class="form-select" id="client_id" name="client_id">
+                                    <option value="">Sélectionner un client</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">
+                                        {{ client.nom }}{% if client.prenom %} {{ client.prenom }}{% endif %}{% if
+                                        client.entreprise %} - {{ client.entreprise }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="client_libre" class="d-none">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="client_libre_nom" class="form-label fw-semibold">Nom du client *</label>
+                                    <input type="text" class="form-control" id="client_libre_nom"
+                                        name="client_libre_nom">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="client_libre_telephone" class="form-label fw-semibold">Téléphone</label>
+                                    <input type="text" class="form-control" id="client_libre_telephone"
+                                        name="client_libre_telephone">
+                                </div>
+                            
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="technicien_id" class="form-label fw-semibold">Technicien</label>
+                            <select class="form-select" id="technicien_id" name="technicien_id">
+                                <option value="">Assigner plus tard</option>
+                                {% for technician in technicians %}
+                                <option value="{{ technician.id }}">{{ technician.prenom }} {{ technician.nom }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_prevue" class="form-label fw-semibold">Date prévue <span
+                                    class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="date_prevue" name="date_prevue"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="duree_estimee" class="form-label fw-semibold">Durée estimée (minutes)</label>
+                            <input type="number" class="form-control" id="duree_estimee" name="duree_estimee" min="1"
+                                step="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="type_intervention" class="form-label fw-semibold">Type d'intervention <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="type_intervention" name="type_intervention" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="Installation">Installation</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Instalattion Vidéo surveillance">Instalattion Vidéo surveillance filaire
+                                </option>
+                                <option value="Instalattion Vidéo surveillance">Instalattion Vidéo surveillance sans-fil
+                                </option>
+                                <option value="Installation Téléphonique">Installation Téléphonique</option>
+                                <option value="Installation Sécurité Incendie">Installation Sécurité Incendie</option>
+                                <option value="Réseau informatique">Réseau informatique</option>
+                                <option value="Entretien parc">Entretien parc</option>
+                                <option value="Installation logiciel">Installation logiciel</option>
+                                <option value="MAJ version logiciel">MAJ version logiciel</option>
+                                <option value="Dépannage">Dépannage logiciel</option>
+                                <option value="Centrale téléphonique">Centrale téléphonique</option>
+                                <option value="Formation initiale">Formation initiale</option>
+
+                                <option value="Autres">Autres</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="adresse" class="form-label fw-semibold">Adresse</label>
+                            <textarea class="form-control" id="adresse" name="adresse" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Matériels requis</label>
+                            <div id="materiels-list" class="border rounded-3 p-3 bg-light">
+                                {% for article in articles %}
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-md-7">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                id="article_{{ article.id }}" name="articles" value="{{ article.id }}">
+                                            <label class="form-check-label" for="article_{{ article.id }}">
+                                                {{ article.name }} <span class="text-muted">({{ article.quantity }} en
+                                                    stock)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="quantite_{{ article.id }}"
+                                                min="1" max="{{ article.quantity }}" placeholder="Qté" disabled
+                                                data-stock="{{ article.quantity }}">
+                                            <span class="input-group-text">pcs</span>
+                                            <div class="invalid-feedback" style="display:none;">
+                                                Stock insuffisant (max : {{ article.quantity }})
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i data-feather="x"></i> Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="check"></i> Créer intervention
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Activer/désactiver le champ quantité selon la case à cocher
+        document.querySelectorAll('#materiels-list .form-check-input').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const qtyInput = this.closest('.row').querySelector('input[type="number"]');
+                qtyInput.disabled = !this.checked;
+                if (!this.checked) {
+                    qtyInput.value = '';
+                    qtyInput.classList.remove('is-invalid');
+                    qtyInput.parentElement.querySelector('.invalid-feedback').style.display = 'none';
+                }
+            });
+        });
+
+        // Contrôle du stock en temps réel
+        document.querySelectorAll('#materiels-list input[type="number"]').forEach(function (input) {
+            input.addEventListener('input', function () {
+                const max = parseInt(this.getAttribute('data-stock'));
+                const val = parseInt(this.value);
+                if (val > max) {
+                    this.classList.add('is-invalid');
+                    this.parentElement.querySelector('.invalid-feedback').style.display = 'block';
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.parentElement.querySelector('.invalid-feedback').style.display = 'none';
+                }
+            });
+        });
+        feather.replace();
+
+        const clientLibreToggle = document.getElementById('client_libre_toggle');
+        const clientExistant = document.getElementById('client_existant');
+        const clientLibre = document.getElementById('client_libre');
+        const clientIdSelect = document.getElementById('client_id');
+
+        clientLibreToggle.addEventListener('change', function () {
+            if (this.checked) {
+                clientExistant.classList.add('d-none');
+                clientLibre.classList.remove('d-none');
+                clientIdSelect.removeAttribute('required');
+                document.getElementById('client_libre_nom').setAttribute('required', 'required');
+            } else {
+                clientExistant.classList.remove('d-none');
+                clientLibre.classList.add('d-none');
+                clientIdSelect.setAttribute('required', 'required');
+                document.getElementById('client_libre_nom').removeAttribute('required');
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        const table = $('#interventionsTable').DataTable({  // Notez le L majuscule
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+            buttons: [
+                {
+                    extend: 'copy',
+                    text: '<i data-feather="copy"></i> Copier',
+                    className: 'btn btn-sm btn-primary me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'excel',
+                    text: '<i data-feather="file-text"></i> Excel',
+                    className: 'btn btn-sm btn-success me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'csv',
+                    text: '<i data-feather="file"></i> CSV',
+                    className: 'btn btn-sm btn-info me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i data-feather="file-text"></i> PDF',
+                    className: 'btn btn-sm btn-danger me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i data-feather="printer"></i> Imprimer',
+                    className: 'btn btn-sm btn-secondary',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }
+            ],
+            pageLength: 10,
+            order: [[0, 'desc']],
+            columnDefs: [
+                {
+                    targets: -1,
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+            drawCallback: function() {
+                feather.replace();
+            }
+        });
+    });
+</script>
+{% endblock %}

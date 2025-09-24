@@ -1,0 +1,5 @@
+id,user_id,titre,description,montant,categorie,date_depense,statut,justificatif,notes_admin,created_at,approved_at,approved_by_id,site
+1,1,Tenu de travail,Tenu de travail,100000.0,Matériel,2025-06-27,approuve,uploads/factures\facture_de_Sama_Hotel_.pdf,,2025-06-27 14:43:28,,,Dakar
+5,1,Installation,Installation,10000.0,Matériel,2025-07-01,en_attente,uploads/factures/facture_de_Sama_Hotel_.pdf,,2025-06-30 13:35:07,,,Dakar
+6,9,Salaire,Paiement du mois de juin,150000.0,Salaire,2025-07-03,approuve,,,2025-07-03 11:28:22,,,Mbour
+7,9,Tenu de travail,Achat Tenu,1000.0,Matériel,2025-07-03,en_attente,,,2025-07-03 12:33:29,,,Mbour

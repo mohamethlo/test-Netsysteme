@@ -1,0 +1,350 @@
+{% extends "billing/base.html" %}
+
+{% block billing_content %}
+<div class="container-fluid py-3">
+    
+    <h1 class="text-center fw-bold">Nouvelle Facture</h1>
+
+    <form method="POST" id="invoiceForm" class="p-3" style="background-color:#f8f9fa; border-radius:10px;">
+        <!-- Informations Facture -->
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card shadow-sm mb-3" style="border-radius:10px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Informations Client et Facture</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-6 col-md-6">
+                                <label for="client_id" class="form-label fw-bold">Client</label>
+                                <select class="form-select" id="client_id" name="client_id" required>
+                                    <option value="">Sélectionner un client</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.company_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="invoice_number" class="form-label fw-bold">Numéro de facture</label>
+                                <input type="text" class="form-control" id="invoice_number" name="invoice_number" value="{{ next_number }}" required>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="date" class="form-label fw-bold">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" value="{{ today.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates et remises -->
+            <div class="col-12">
+                <div class="card shadow-sm mb-3" style="border-radius:10px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Dates et Remises</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="due_date" class="form-label fw-bold">Date d'échéance</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date">
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="tax_rate" class="form-label fw-bold">Taux de TVA (%)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="tax_rate" name="tax_rate" value="0">
+                                    <button class="btn btn-outline-primary" type="button" id="toggleTax">Avec TVA</button>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="discount_type" class="form-label fw-bold">Type de remise</label>
+                                <select class="form-select" id="discount_type" name="discount_type">
+                                    <option value="none">Aucune remise</option>
+                                    <option value="percent">Pourcentage</option>
+                                    <option value="amount">Montant fixe</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-md-3" id="discount_value_field" style="display: none;">
+                                <label for="discount_value" class="form-label fw-bold">Valeur de remise</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control" id="discount_value" name="discount_value" value="0">
+                                    <span class="input-group-text" id="discount_suffix">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domaine -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm mb-3" style="border-radius:10px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Domaine</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <select class="form-select" id="domaine" name="domaine" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="NETSYSTEME">NETSYSTEME</option>
+                            <option value="SSE">SSE</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="col-12">
+                <div class="card shadow-sm mb-3" style="border-radius:10px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Notes</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Ex: Livraison urgente, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Articles -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Articles</h5>
+            </div>
+            <div class="card-body position-relative">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="itemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produit</th>
+                                <th>Description</th>
+                                <th>Qté</th>
+                                <th>Prix Unitaire</th>
+                                <th>Remise %</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="item-row">
+                                <td data-label="Produit">
+                                    <select class="form-select product-select" name="item_product_id[]">
+                                        <option value="">Sélectionner</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.id }}" 
+                                                data-price="{{ product.unit_price }}"
+                                                data-description="{{ product.description | replace("`", "'") | replace('"', '&quot;') }}">
+                                            {{ product.description | replace("`", "'") }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td data-label="Description"><input type="text" class="form-control" name="item_description[]" placeholder="Description"></td>
+                                <td data-label="Qté"><input type="number" step="1" class="form-control quantity" name="item_quantity[]" value="1" min="1"></td>
+                                <td data-label="Prix Unitaire"><input type="number" step="0.01" class="form-control unit-price" name="item_unit_price[]" value="0" min="0"></td>
+                                <td data-label="Remise %"><input type="number" step="0.01" class="form-control discount" name="item_discount[]" value="0" min="0" max="100"></td>
+                                <td data-label="Total" class="item-total fw-bold">0 Fcfa</td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-item">
+                                        <i data-feather="trash-2"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bouton ajouter article standard pour desktop -->
+                <button type="button" class="btn btn-success mt-3 d-none d-md-inline-block" id="addItemBtnDesktop">
+                    <i data-feather="plus"></i> Ajouter un article
+                </button>
+
+                <!-- Bouton flottant pour mobile -->
+                <button type="button" class="btn btn-success d-md-none position-fixed bottom-0 end-0 m-3 rounded-circle shadow-lg p-3" id="addItemBtn" title="Ajouter un article">
+                    <i data-feather="plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Total général -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center bg-light rounded">
+                <h5 class="fw-bold">Total général:</h5>
+                <h5 id="grandTotal" class="text-primary fw-bold">0 Fcfa</h5>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row g-2 mb-3">
+            <div class="col-12 col-md-6">
+                <a href="{{ url_for('billing.manage_invoices') }}" class="btn btn-outline-secondary w-100 mb-2 mb-md-0">
+                    <i data-feather="x"></i> Annuler
+                </a>
+            </div>
+            <div class="col-12 col-md-6">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i data-feather="save"></i> Enregistrer la facture
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<style>
+/* Amélioration de la responsivité */
+@media (max-width: 768px) {
+    .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .card {
+        width: 100% !important;
+    }
+
+    table#itemsTable thead { display: none; }
+    table#itemsTable tr.item-row {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    table#itemsTable td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: none !important;
+        padding: 0.5rem 0;
+    }
+    table#itemsTable td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        flex: 1;
+        text-align: left;
+    }
+    table#itemsTable td input,
+    table#itemsTable td select {
+        flex: 2;
+        margin-left: 1rem;
+    }
+}
+
+/* Très petits écrans (≤576px) */
+@media (max-width: 576px) {
+    table#itemsTable td {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    table#itemsTable td input,
+    table#itemsTable td select {
+        width: 100%;
+        margin: 0.25rem 0 0 0;
+    }
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    h1, h5 {
+        font-size: 1rem;
+    }
+}
+
+/* Bouton flottant mobile toujours visible */
+#addItemBtn {
+    z-index: 1050;
+}
+</style>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // TVA
+    const toggleTaxBtn = document.getElementById('toggleTax');
+    const taxRateInput = document.getElementById('tax_rate');
+    toggleTaxBtn.addEventListener('click', function() {
+        if (taxRateInput.value === '0') {
+            taxRateInput.value = '0.18';
+            this.textContent = 'Sans TVA';
+            this.classList.replace('btn-outline-primary','btn-primary');
+        } else {
+            taxRateInput.value = '0';
+            this.textContent = 'Avec TVA';
+            this.classList.replace('btn-primary','btn-outline-primary');
+        }
+    });
+
+    // Remises
+    const discountType = document.getElementById('discount_type');
+    const discountValueField = document.getElementById('discount_value_field');
+    const discountSuffix = document.getElementById('discount_suffix');
+    discountType.addEventListener('change', function() {
+        if(this.value==='none') discountValueField.style.display='none';
+        else { discountValueField.style.display='block'; discountSuffix.textContent=this.value==='percent'?'%':'Fcfa'; }
+    });
+
+    // Articles
+    const addItemBtnMobile = document.getElementById('addItemBtn');
+    const addItemBtnDesktop = document.getElementById('addItemBtnDesktop');
+    const itemsTable = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+    const grandTotalEl = document.getElementById('grandTotal');
+
+    function calculateTotals(){
+        let totalGeneral = 0;
+        Array.from(itemsTable.rows).forEach(row => {
+            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.unit-price').value) || 0;
+            const discount = parseFloat(row.querySelector('.discount').value) || 0;
+            let total = qty*price*(1 - discount/100);
+            row.querySelector('.item-total').textContent = total.toFixed(2)+' Fcfa';
+            totalGeneral += total;
+        });
+        grandTotalEl.textContent = totalGeneral.toFixed(2)+' Fcfa';
+    }
+
+    function initRowEvents(row){
+        row.querySelector('.product-select').addEventListener('change', function(){
+            if(this.value){
+                const option=this.options[this.selectedIndex];
+                row.querySelector('.unit-price').value = option.dataset.price;
+                row.querySelector('input[name="item_description[]"]').value = option.dataset.description||'';
+                calculateTotals();
+            }
+        });
+        row.querySelector('.quantity').addEventListener('input', calculateTotals);
+        row.querySelector('.unit-price').addEventListener('input', calculateTotals);
+        row.querySelector('.discount').addEventListener('input', calculateTotals);
+
+        row.querySelector('.remove-item').addEventListener('click',function(){
+            if(itemsTable.rows.length>1) row.remove();
+            else {
+                row.querySelector('.product-select').value='';
+                row.querySelector('input[name="item_description[]"]').value='';
+                row.querySelector('.quantity').value='1';
+                row.querySelector('.unit-price').value='0';
+                row.querySelector('.discount').value='0';
+                row.querySelector('.item-total').textContent='0 Fcfa';
+            }
+            calculateTotals();
+        });
+    }
+
+    function addNewRow(){
+        const newRow = itemsTable.insertRow();
+        newRow.classList.add('item-row');
+        newRow.innerHTML = itemsTable.rows[0].innerHTML;
+        feather.replace();
+        initRowEvents(newRow);
+        calculateTotals();
+    }
+
+    addItemBtnMobile.addEventListener('click', addNewRow);
+    addItemBtnDesktop.addEventListener('click', addNewRow);
+
+    Array.from(itemsTable.rows).forEach(initRowEvents);
+
+    calculateTotals();
+});
+</script>
+{% endblock %}

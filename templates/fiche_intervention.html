@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Fiche d'intervention</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm 25mm;
+    }
+
+    body {
+      font-family: 'Helvetica', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background: white;
+      color: #2c3e50;
+    }
+
+    .page {
+      position: relative;
+      background: white;
+      min-height: 297mm;
+      padding: 20mm;
+      margin: 0 auto;
+      box-shadow: 0 0 0.5cm rgba(0,0,0,0.1);
+      page-break-after: always;
+    }
+
+    .header-logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header-logo-container img {
+      width: 100%; 
+      height: auto;
+      object-fit: contain;
+    }
+
+    .header-title {
+      font-size: 24pt;
+      font-weight: bold;
+      text-align: center;
+      margin: 15px 0;
+      color: #2c3e50;
+    }
+
+    .header-subtitle {
+      font-size: 16pt;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #34495e;
+    }
+
+    .info-box {
+      display: table;
+      width: 100%;
+      border: 2px solid #3498db;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      background: #f8fafc;
+    }
+
+    .info-box-left, .info-box-right {
+      display: table-cell;
+      width: 50%;
+      padding: 20px;
+      vertical-align: top;
+    }
+
+    .info-box-left {
+      border-right: 2px solid #3498db;
+    }
+
+    .info-box-label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-size: 12pt;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 25px 0;
+      border: 2px solid #3498db;
+    }
+
+    th, td {
+      border: 1px solid #3498db;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #3498db;
+      color: white;
+      text-align: center;
+      font-size: 14pt;
+      padding: 15px;
+    }
+
+    .checkbox {
+      font-size: 13pt;
+      line-height: 1.6;
+      margin: 6px 0;
+    }
+
+    .checkbox.checked {
+      color: #2980b9;
+      font-weight: bold;
+    }
+
+    .second-page-box {
+      border: 2px solid #3498db;
+      border-radius: 5px;
+      margin-bottom: 25px;
+      background: #f8fafc;
+    }
+
+    .second-page-row {
+      padding: 15px;
+      border-bottom: 1px solid #3498db;
+    }
+
+    .second-page-row:last-child {
+      border-bottom: none;
+    }
+
+    .second-page-label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+
+    .final-box {
+      border: 2px solid #3498db;
+      border-radius: 5px;
+      margin-top: 30px;
+      background: #f8fafc;
+    }
+
+    .final-header {
+      background: #3498db;
+      color: white;
+      padding: 12px;
+      font-weight: bold;
+    }
+
+    .final-content {
+      display: table;
+      width: 100%;
+    }
+
+    .final-left, .final-right {
+      display: table-cell;
+      width: 50%;
+      padding: 25px;
+      vertical-align: top;
+      text-align: center;
+    }
+
+    .final-left {
+      border-right: 2px solid #3498db;
+    }
+
+    .signature-line {
+      font-weight: bold;
+      border-bottom: 2px solid #3498db;
+      display: inline-block;
+      padding: 0 20px 5px;
+      margin-bottom: 25px;
+      font-size: 12pt;
+    }
+
+    .stamp-placeholder {
+      margin: 20px auto;
+      text-align: center;
+    }
+
+    .stamp-placeholder img {
+      max-width: 150px;
+      height: auto;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 20mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 9pt;
+      color: #7f8c8d;
+    }
+
+    .footer-border {
+      border-top: 3px double #3498db;
+      margin: 0 auto 10px;
+      width: 80%;
+    }
+
+    strong {
+      color: #2c3e50;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      image-rendering: -webkit-optimize-contrast;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header-logo-container">
+    <img src="{{ url_for('static', filename='img/logo_lgc.png', _external=True) }}" alt="Logo">
+  </div>
+  <div class="header-title">FICHE D'INTERVENTION</div>
+  <div class="header-subtitle">NETSYSTEME INFORMATIQUE & TELECOM</div>
+
+  <div class="info-box">
+    <div class="info-box-right">
+      <div class="info-box-label">Société ou organisme :</div>
+      <div>
+        {% if intervention.client %}
+          {{ intervention.client.nom }} {{ intervention.client.prenom }}
+          {% if intervention.client.entreprise %}
+            - {{ intervention.client.entreprise }}
+          {% endif %}
+        {% else %}
+          {{ intervention.client_libre_nom }}
+          {% if intervention.societe %}
+            - {{ intervention.societe }}
+          {% endif %}
+        {% endif %}
+      </div>
+      <div>N°000{{ intervention.id }}</div>
+    </div>
+    <div class="info-box-left">
+      <div class="info-box-label">Nom de l'intervenant :</div>
+      <div>{{ intervention.technicien.prenom }} {{ intervention.technicien.nom }}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th colspan="3">NATURE DE L'INTERVENTION</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>- Assistance Administrative</td>
+        <td>
+          <div class="checkbox">☐ Audit</div>
+          <div class="checkbox">☐ Réglement</div>
+          <div class="checkbox">☐ Conseil</div>
+          <div class="checkbox">☐ Formation</div>
+        </td>
+        <td rowspan="3">{{ intervention.description }}</td>
+      </tr>
+      <tr>
+        <td>- Assistance Technique</td>
+        <td>
+          <div class="checkbox checked">☑ {{ intervention.type_intervention or 'Type inconnu' }}</div>
+          
+        </td>
+      </tr>
+      <tr>
+        <td>- Logiciel</td>
+        <td>
+          
+          <div class="checkbox">☐ Installation logiciel</div>
+          <div class="checkbox">☐ MAJ version logiciel</div>
+          <div class="checkbox">☐ Formation initiale</div>
+          <div class="checkbox">☐ Dépannage logiciel</div>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div class="footer-border"></div>
+    <div>Whatsapp: 77 846 16 55 / Bureau: 33 883 42 42 - 33 827 28 45</div>
+    <div>Ouest foire, route aéroport, immeuble Seigneurie</div>
+    <div>R.C.SN/DKR-2010.A.7987 // NINEA: 004225464 // www.netsys-info.com</div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="second-page-box">
+    <div class="second-page-row">
+      <div class="second-page-label">Observations et suite donnée :</div>
+      <div>{{ intervention.observations_technicien }}</div>
+    </div>
+    <div class="second-page-row">
+      <div>
+        <strong>Durée de l'intervention :</strong> {{ intervention.duree_intervention.strftime('%H:%M') if intervention.duree_intervention else '--:--' }} &nbsp;&nbsp;
+        <strong>Heure d'arrivée :</strong> {{ intervention.heure_arrivee.strftime('%H:%M') if intervention.heure_arrivee else '--:--' }} &nbsp;&nbsp;
+        <strong>Heure de départ :</strong> {{ intervention.heure_depart.strftime('%H:%M') if intervention.heure_depart else '--:--' }}
+      </div>
+    </div>
+    <div class="second-page-row">
+      <div>
+        <strong>Identifiant DVR/NVR :</strong> {{ intervention.id_dvr_nvr or 'Non renseigné' }} &nbsp;&nbsp;
+        <strong>Mot de passe DVR/NVR :</strong> {{ intervention.mdp_dvr_nvr or 'Non renseigné' }}
+      </div>
+    </div>
+  </div>
+
+  <div class="final-box">
+    <div class="final-header">Observations du représentant ......................................................................</div>
+    <div class="final-content">
+      <div class="final-left">
+        <div class="signature-line">La direction</div>
+        <div class="stamp-placeholder">
+          <img src="{{ url_for('static', filename='img/CachetNetsys.PNG', _external=True) }}" alt="Cachet" style="width:auto; margin:20px auto;">
+        </div>
+        <div>Fait le : {{ intervention.date_prevue.strftime('%Y-%m-%d') }}</div>
+      </div>
+      <div class="final-right">
+        <div class="signature-line">Signature représentant</div>
+        {% if intervention.signature_data %}
+          <img src="{{ intervention.signature_data }}" alt="Signature" style="height:80px; width:auto; margin:20px auto;">
+        {% else %}
+          <div style="height: 80px; margin: 20px auto; border:1px dashed #ccc;"></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-border"></div>
+    <div>Whatsapp: 77 846 16 55 / Bureau: 33 883 42 42 - 33 827 28 45</div>
+    <div>Ouest foire, route aéroport, immeuble Seigneurie</div>
+    <div>R.C.SN/DKR-2010.A.7987 // NINEA: 004225464 // www.netsys-info.com</div>
+  </div>
+</div>
+
+</body>
+</html>

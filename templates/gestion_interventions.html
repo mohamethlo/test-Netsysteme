@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar vh-100 position-fixed" style="background-color: #0b173d;">
+            <div class="sidebar-sticky pt-3">
+                <div class="px-3 py-3 mb-4 text-white fw-bold fs-5 d-flex align-items-center">
+                    <i data-feather="tool" class="me-2"></i> Gestion des Interventions
+                </div>
+
+                <ul class="nav flex-column mt-2">
+                    {% if current_user.has_permission('interventions') %}
+                    <li class="nav-item">
+                        <a class="nav-link active text-white" id="tab-interventions-btn" href="#" onclick="showTab('interventions')">
+                            <i data-feather="tool" class="text-white"></i> Interventions
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.has_permission('installations') %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white" id="tab-installations-btn" href="#" onclick="showTab('installations')">
+                            <i data-feather="settings" class="text-white"></i> Installations
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 offset-md-2 vh-100 d-flex flex-column">
+            <div id="interventions" class="tab-content flex-grow-1">
+                <iframe src="{{ url_for('main.interventions') }}" frameborder="0" style="width:100%; height:100%;"></iframe>
+            </div>
+            <div id="installations" class="tab-content d-none flex-grow-1">
+                <iframe src="{{ url_for('main.installations') }}" frameborder="0" style="width:100%; height:100%;"></iframe>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('d-none'));
+    document.getElementById(tabId).classList.remove('d-none');
+
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    document.getElementById('tab-' + tabId + '-btn').classList.add('active');
+}
+</script>
+
+<style>
+.nav-link.active {
+    background-color: #06204d;
+    font-weight: bold;
+    border-radius: 0.25rem;
+}
+.nav-link:hover {
+    background-color: #06204d;
+    border-radius: 0.25rem;
+    color: #fff !important;
+}
+</style>
+{% endblock %}

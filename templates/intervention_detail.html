@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Fiche Intervention - {{ intervention.titre }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow border-0">
+                <div class="card-header bg-gradient bg-primary text-white d-flex align-items-center">
+                    <i data-feather="file-text" class="me-2"></i>
+                    <h3 class="mb-0 flex-grow-1">{{ intervention.titre }}</h3>
+                    <span class="badge {{ get_status_badge_class(intervention.statut) }} ms-2">
+                        {{ intervention.statut|replace('_', ' ')|title }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Section infos principales -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100 bg-light">
+                                <h6 class="text-primary mb-2"><i data-feather="user" class="me-1"></i>Client</h6>
+                                <div class="fw-bold">{{ intervention.client.nom }}{% if intervention.client.prenom %} {{ intervention.client.prenom }}{% endif %}</div>
+                                {% if intervention.client.entreprise %}
+                                    <div class="text-muted small">{{ intervention.client.entreprise }}</div>
+                                {% endif %}
+                                <div class="text-muted small">{{ intervention.client.telephone }}</div>
+                                <hr>
+                                <h6 class="text-primary mb-2"><i data-feather="user-check" class="me-1"></i>Technicien</h6>
+                                {% if intervention.technicien %}
+                                    <div class="fw-bold">{{ intervention.technicien.prenom }} {{ intervention.technicien.nom }}</div>
+                                {% else %}
+                                    <span class="text-muted">Non assigné</span>
+                                {% endif %}
+                                {% if intervention.autres_intervenants %}
+                                    <div class="mt-2">
+                                        <span class="text-muted small">Autres intervenants :</span>
+                                        <ul class="mb-0 small">
+                                            {% for user in intervention.autres_intervenants %}
+                                                <li>{{ user.prenom }} {{ user.nom }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100 bg-light">
+                                <h6 class="text-primary mb-2"><i data-feather="calendar" class="me-1"></i>Date prévue</h6>
+                                <div>{{ intervention.date_prevue.strftime('%d/%m/%Y %H:%M') }}</div>
+                                <hr>
+                                <h6 class="text-primary mb-2"><i data-feather="clock" class="me-1"></i>Durée</h6>
+                                <div>
+                                    {% if intervention.duree_intervention %}
+                                        {{ intervention.duree_intervention.strftime('%Hh%M') }}
+                                    {% elif intervention.duree_estimee %}
+                                        {{ (intervention.duree_estimee // 60) }}h{{ (intervention.duree_estimee % 60) }}m (estimée)
+                                    {% else %}
+                                        <span class="text-muted">Non définie</span>
+                                    {% endif %}
+                                </div>
+                                <hr>
+                                <h6 class="text-primary mb-2"><i data-feather="flag" class="me-1"></i>Priorité</h6>
+                                <span class="badge {{ get_priority_badge_class(intervention.priorite) }}">
+                                    {{ intervention.priorite|title }}
+                                </span>
+                                <hr>
+                                <h6 class="text-primary mb-2"><i data-feather="type" class="me-1"></i>Type</h6>
+                                <div>{{ intervention.type_intervention or '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section détails -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h6 class="text-secondary mb-2"><i data-feather="map-pin" class="me-1"></i>Adresse</h6>
+                                <div>{{ intervention.adresse or '-' }}</div>
+                                <hr>
+                                <h6 class="text-secondary mb-2"><i data-feather="briefcase" class="me-1"></i>Société</h6>
+                                <div>{{ intervention.societe or '-' }}</div>
+                                <hr>
+                                <h6 class="text-secondary mb-2"><i data-feather="user" class="me-1"></i>Représentant</h6>
+                                <div>{{ intervention.representant or '-' }}</div>
+                                <hr>
+                                <h6 class="text-secondary mb-2"><i data-feather="phone" class="me-1"></i>Téléphone</h6>
+                                <div>{{ intervention.telephone or '-' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h6 class="text-secondary mb-2"><i data-feather="info" class="me-1"></i>Description</h6>
+                                <div>{{ intervention.description or '-' }}</div>
+                                <hr>
+                                <h6 class="text-secondary mb-2"><i data-feather="check-square" class="me-1"></i>Tâches réalisées</h6>
+                                <div>{{ intervention.taches_realisees or '-' }}</div>
+                                <hr>
+                                <h6 class="text-secondary mb-2"><i data-feather="edit-3" class="me-1"></i>Observations technicien</h6>
+                                <div>{{ intervention.observations_technicien or '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section horaires -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h6 class="text-info mb-2"><i data-feather="log-in" class="me-1"></i>Heure d'arrivée</h6>
+                                <div>{{ intervention.heure_arrivee.strftime('%H:%M') if intervention.heure_arrivee else '-' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h6 class="text-info mb-2"><i data-feather="log-out" class="me-1"></i>Heure de départ</h6>
+                                <div>{{ intervention.heure_depart.strftime('%H:%M') if intervention.heure_depart else '-' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h6 class="text-info mb-2"><i data-feather="clock" class="me-1"></i>Durée intervention</h6>
+                                <div>{{ intervention.duree_intervention.strftime('%H:%M') if intervention.duree_intervention else '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section matériels et signature -->
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <div class="border rounded-3 p-3 h-100">
+                                <h6 class="text-success mb-3"><i data-feather="package" class="me-1"></i>Matériels utilisés</h6>
+                                {% if intervention.materiels %}
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Article</th>
+                                                <th>Quantité</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for mat in intervention.materiels %}
+                                            <tr>
+                                                <td>{{ mat.article.name }}</td>
+                                                <td><span class="badge bg-primary">{{ mat.quantite }}</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    <p class="text-muted mb-0">Aucun matériel utilisé pour cette intervention.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="border rounded-3 p-3 h-100 text-center">
+                                <h6 class="text-warning mb-3"><i data-feather="pen-tool" class="me-1"></i>Signature technicien</h6>
+                                {% if intervention.signature_data %}
+                                    <img src="{{ intervention.signature_data }}" alt="Signature" style="border:1px solid #ccc;max-width:100%;height:auto;">
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-end bg-light">
+                    <a href="{{ url_for('main.interventions') }}" class="btn btn-outline-primary">
+                        <i data-feather="arrow-left"></i> Retour à la liste
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    feather.replace();
+</script>
+{% endblock %}

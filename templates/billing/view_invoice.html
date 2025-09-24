@@ -1,0 +1,124 @@
+{% extends "billing/base.html" %}
+
+{% block billing_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Facture {{ invoice.invoice_number }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('billing.manage_invoices') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left"></i> Retour
+            </a>
+            {% if invoice.status == 'draft' %}
+            <a href="{{ url_for('billing.confirm_invoice', invoice_id=invoice.id) }}" class="btn btn-sm btn-primary">
+                <i data-feather="check"></i> Confirmer
+            </a>
+            {% endif %}
+            <!-- <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                <i data-feather="printer"></i> Imprimer
+            </button> -->
+            <a target="_blank" href="{{ url_for('billing.invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
+                <i data-feather="file-text"></i> PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Client</h5>
+                <p class="card-text">
+                    <strong>{{ invoice.billing_client.company_name }}</strong><br>
+                    {% if invoice.billing_client.contact_name %}{{ invoice.billing_client.contact_name }}<br>{% endif %}
+                    {% if invoice.billing_client.address %}{{ invoice.billing_client.address }}<br>{% endif %}
+                    {% if invoice.billing_client.phone %}Tél: {{ invoice.billing_client.phone }}<br>{% endif %}
+                    {% if invoice.billing_client.email %}Email: {{ invoice.billing_client.email }}{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Détails de la facture</h5>
+                <p class="card-text">
+                    <strong>Date:</strong> {{ invoice.date.strftime('%d/%m/%Y') }}<br>
+                    <strong>Échéance:</strong> {% if invoice.due_date %}{{ invoice.due_date.strftime('%d/%m/%Y') }}{% else %}Non spécifiée{% endif %}<br>
+                    <strong>Statut:</strong> 
+                    <span class="badge bg-{% if invoice.status == 'paid' %}success{% elif invoice.status == 'confirmed' %}primary{% else %}secondary{% endif %}">
+                        {{ invoice.status }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Qté</th>
+                        <th>Prix Unitaire</th>
+                        <th>Remise</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items %}
+                    <tr>
+                        <td>{{ item.description }}</td>
+                        <td>{{ "%.2f"|format(item.quantity) }}</td>
+                        <td>{{ "%.2f"|format(item.unit_price) }} Fcfa</td>
+                        <td>{{ "%.0f"|format(item.discount_percent) }}%</td>
+                        <td>{{ "%.2f"|format(item.subtotal_after_discount()) }} Fcfa</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Notes</h5>
+                <p class="card-text">{{ invoice.notes or "Aucune note" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Total HT:</th>
+                        <td class="text-end">{{ "%.2f"|format(invoice.total_amount()) }} Fcfa</td>
+                    </tr>
+                    <tr>
+                        <th>TVA ({{ "%.0f"|format(invoice.tax_rate * 100) }}%):</th>
+                        <td class="text-end">{{ "%.2f"|format(invoice.tax_amount()) }} Fcfa</td>
+                    </tr>
+                    {% if invoice.discount_percent > 0 or invoice.discount_amount > 0 %}
+                    <tr>
+                        <th>Remise:</th>
+                        <td class="text-end text-danger">-{{ "%.2f"|format(invoice.discount_value()) }} Fcfa</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="table-active">
+                        <th>Total TTC:</th>
+                        <th class="text-end">{{ "%.2f"|format(invoice.total_with_tax_and_discount()) }} Fcfa</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Clients blacklistés - {{ super() }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h4 class="mb-3">Clients blacklistés</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Liste des clients blacklistés</h5>
+                </div>
+                <div class="card-body">
+                    {% if clients %}
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="blackListTable">
+                            <thead>
+                                <tr>
+                                    <th>Nom complet</th>
+                                    <th>Entreprise</th>
+                                    <th>Contact</th>
+                                    <th>Adresse</th>
+                                    <th>Date de blacklisting</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for client in clients %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ client.nom }}</strong>
+                                        {% if client.prenom %}{{ client.prenom }}{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.entreprise %}
+                                        {{ client.entreprise }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.email %}
+                                        <div><i data-feather="mail" class="me-1"
+                                                style="width: 14px; height: 14px;"></i>{{ client.email }}</div>
+                                        {% endif %}
+                                        {% if client.telephone %}
+                                        <div><i data-feather="phone" class="me-1"
+                                                style="width: 14px; height: 14px;"></i>{{ client.telephone }}</div>
+                                        {% endif %}
+                                        {% if not client.email and not client.telephone %}
+                                        <span class="text-muted">Non renseigné</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.adresse %}
+                                        {{ client.adresse[:30] }}{% if client.adresse|length > 30 %}...{% endif %}
+                                        {% if client.ville %}
+                                        <br><small class="text-muted">{{ client.ville }}{% if client.code_postal %} ({{
+                                            client.code_postal }}){% endif %}</small>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">Non renseignée</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.date_blacklisted %}
+                                        {{ client.date_blacklisted.strftime('%d/%m/%Y %H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- Exemple d'action : voir détails -->
+                                        <a href="{{ url_for('main.client_details', client_id=client.id) }}"
+                                            class="btn btn-outline-primary btn-sm" title="Voir détails">
+                                            <i data-feather="eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="users" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucun client blacklisté</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        const table = $('#blackListTable').DataTable({  // Notez le L majuscule
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+            buttons: [
+                {
+                    extend: 'copy',
+                    text: '<i data-feather="copy"></i> Copier',
+                    className: 'btn btn-sm btn-primary me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'excel',
+                    text: '<i data-feather="file-text"></i> Excel',
+                    className: 'btn btn-sm btn-success me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'csv',
+                    text: '<i data-feather="file"></i> CSV',
+                    className: 'btn btn-sm btn-info me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i data-feather="file-text"></i> PDF',
+                    className: 'btn btn-sm btn-danger me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i data-feather="printer"></i> Imprimer',
+                    className: 'btn btn-sm btn-secondary',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }
+            ],
+            pageLength: 10,
+            order: [[0, 'asc']],
+            columnDefs: [
+                {
+                    targets: -1,
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+            drawCallback: function() {
+                feather.replace();
+            }
+        });
+    });
+</script>
+{% endblock %}

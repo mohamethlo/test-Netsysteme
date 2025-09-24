@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Corbeille - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <h2 class="mb-4 text-center">
+        <i data-feather="trash-2" class="text-danger me-2"></i>
+        Corbeille des Dépenses
+    </h2>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Dépenses supprimées (stockées max. 24h)</h5>
+            <a class="btn btn-light btn-sm" href="{{ url_for('main.expenses_by_site', site=site if site else 'Mbour') }}">
+                <i data-feather="chevron-left"></i> Retour
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Titre</th>
+                            <th>Montant</th>
+                            <th>Catégorie</th>
+                            <th>Statut</th>
+                            <th>Supprimée le</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trash-table-body">
+                        <!-- Contenu rempli dynamiquement via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+/*
+  IMPORTANT:
+  - On utilise url_for côté serveur pour construire un template d'URL valide, puis
+    on remplace le segment "0" par l'ID réel côté client.
+  - Ces templates doivent correspondre à tes routes Flask existantes :
+      url_for('main.restore_expense', expense_id=0) -> '/expense/0/restore'
+      url_for('main.force_delete_expense', expense_id=0) -> '/expense/0/force_delete'
+  - L'API d'obtention des éléments renvoie JSON via /api/expenses/trash (endpoint main.api_trash).
+*/
+
+const apiUrl = "{{ url_for('main.api_trash') }}";
+const restoreUrlTemplate = "{{ url_for('main.restore_expense', expense_id=0) }}";
+const forceDeleteUrlTemplate = "{{ url_for('main.force_delete_expense', expense_id=0) }}";
+
+// construis l'URL finale en remplaçant "/0/" par "/{id}/"
+function buildUrlFromTemplate(template, id) {
+    return template.replace(/\/0\//, `/${id}/`);
+}
+
+async function fetchTrash() {
+    try {
+        const res = await fetch(apiUrl, { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Erreur réseau');
+        return await res.json();
+    } catch (err) {
+        console.error('Erreur fetchTrash:', err);
+        return [];
+    }
+}
+
+function emptyRowMessage() {
+    return `
+        <tr>
+            <td colspan="7" class="text-center text-muted py-4">
+                <i data-feather="inbox" class="mb-2" style="width:48px; height:48px;"></i><br>
+                Aucune dépense supprimée
+            </td>
+        </tr>
+    `;
+}
+
+function createRowHtml(e) {
+    const categorieHtml = e.categorie
+        ? `<span class="badge bg-secondary">${escapeHtml(e.categorie)}</span>`
+        : `<span class="text-muted">Non catégorisé</span>`;
+
+    // Note: les boutons appellent restoreExpense(id) / forceDeleteExpense(id)
+    return `
+        <tr data-id="${e.id}">
+            <td>${escapeHtml(e.date_depense)}</td>
+            <td><strong>${escapeHtml(e.titre)}</strong></td>
+            <td><strong>${escapeHtml(e.montant)} Fcfa</strong></td>
+            <td>${categorieHtml}</td>
+            <td><span class="badge ${getStatusBadgeClassForClient(e.statut)}">${escapeHtml(e.statut)}</span></td>
+            <td>${escapeHtml(e.deleted_at)}</td>
+            <td>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-success" title="Restaurer" onclick="restoreExpense(${e.id})">
+                        <i data-feather="rotate-ccw"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" title="Supprimer définitivement" onclick="forceDeleteExpense(${e.id})">
+                        <i data-feather="trash-2"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// petit helper pour échapper le HTML
+function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+// mapping simple pour badge côté client si tu ne veux pas passer get_status_badge_class via JSON.
+// Ajuste les classes si tu utilises d'autres styles.
+function getStatusBadgeClassForClient(status) {
+    switch (status) {
+        case 'en_attente': return 'bg-warning text-dark';
+        case 'approuve': return 'bg-success';
+        case 'refuse': return 'bg-danger';
+        default: return 'bg-secondary';
+    }
+}
+
+// POST helper
+async function postTo(url) {
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        if (!res.ok) throw new Error('Erreur requête: ' + res.status);
+        return true;
+    } catch (err) {
+        console.error('postTo error', err);
+        return false;
+    }
+}
+
+// Actions utilisateur (AJAX)
+async function restoreExpense(id) {
+    Swal.fire({
+        title: "Restaurer la dépense ?",
+        text: "Cette dépense sera réintégrée dans la liste active.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#198754",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Oui, restaurer",
+        cancelButtonText: "Annuler"
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const url = buildUrlFromTemplate(restoreUrlTemplate, id);
+            const ok = await postTo(url);
+            if (ok) {
+                Swal.fire("Restaurée !", "La dépense a été restaurée.", "success");
+                await refreshTrash();
+            } else {
+                Swal.fire("Erreur", "Impossible de restaurer la dépense.", "error");
+            }
+        }
+    });
+}
+
+async function forceDeleteExpense(id) {
+    Swal.fire({
+        title: "Supprimer définitivement ?",
+        text: "Cette action est irréversible, la dépense sera définitivement perdue.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Oui, supprimer",
+        cancelButtonText: "Annuler"
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const url = buildUrlFromTemplate(forceDeleteUrlTemplate, id);
+            const ok = await postTo(url);
+            if (ok) {
+                Swal.fire("Supprimée !", "La dépense a été définitivement supprimée.", "success");
+                await refreshTrash();
+            } else {
+                Swal.fire("Erreur", "Impossible de supprimer la dépense.", "error");
+            }
+        }
+    });
+}
+
+// Rafraîchissement principal
+async function refreshTrash() {
+    const tbody = document.querySelector('#trash-table-body');
+    const list = await fetchTrash();
+    tbody.innerHTML = '';
+
+    if (!list || list.length === 0) {
+        tbody.innerHTML = emptyRowMessage();
+    } else {
+        const frag = document.createDocumentFragment();
+        list.forEach(e => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = createRowHtml(e);
+            frag.appendChild(tr);
+        });
+        tbody.appendChild(frag);
+    }
+
+    // replace feather icons
+    if (window.feather) feather.replace();
+}
+
+// auto-refresh toutes les 5s
+const REFRESH_INTERVAL_MS = 5000;
+let refreshInterval = setInterval(refreshTrash, REFRESH_INTERVAL_MS);
+
+// premier chargement
+refreshTrash();
+
+</script>
+{% endblock %}

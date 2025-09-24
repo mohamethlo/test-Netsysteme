@@ -1,0 +1,16 @@
+<!-- templates/installations/versement.html -->
+<form method="POST">
+    <div class="mb-3">
+        <label>Montant total</label>
+        <input type="number" class="form-control" value="{{ installation.montant_total }}" readonly>
+    </div>
+    <div class="mb-3">
+        <label>Montant restant à payer</label>
+        <input type="number" class="form-control" value="{{ installation.montant_restant }}" readonly>
+    </div>
+    <div class="mb-3">
+        <label>Montant à verser</label>
+        <input type="number" class="form-control" name="montant_verse" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Valider le versement</button>
+</form>

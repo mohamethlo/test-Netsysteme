@@ -1,0 +1,6 @@
+id,name,permissions,created_at
+1,Administrateur,all,2025-06-10 15:08:09
+2,Commercial,"clients,interventions,expenses",2025-06-10 15:08:09
+3,Technicien,"attendance,interventions",2025-06-10 15:08:09
+4,Dev_administration,attendance,2025-06-16 13:36:54
+5,administration,"attendance,interventions",2025-06-18 13:04:45

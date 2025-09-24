@@ -1,0 +1,2 @@
+id,name,description,quantity,alert_quantity,unit_price,supplier,image_path,created_at,updated_at
+1,Caméra,Caméra surveillance,1.0,5.0,20000.0,NETSYS,static\uploads\logo_lg.png,2025-06-19 12:47:58,2025-06-19 18:40:56

@@ -1,0 +1,18 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Commercial</th>
+            <th>Note de conversion</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in clients %}
+        <tr>
+            <td>{{ c.prenom }} {{ c.nom }}</td>
+            <td>{{ commerciaux.get(c.converted_by_id, 'N/A') }}</td>
+            <td>{{ c.note_conversion or '' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

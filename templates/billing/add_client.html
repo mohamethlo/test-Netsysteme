@@ -1,0 +1,52 @@
+{% extends "billing/base.html" %}
+
+{% block billing_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Ajouter un Client</h1>
+</div>
+
+<form method="POST">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="company_name" class="form-label">Nom complet</label>
+            <input type="text" class="form-control" id="company_name" name="company_name" required>
+        </div>
+        <div class="col-md-6">
+            <label for="contact_name" class="form-label">Personne de contact</label>
+            <input type="text" class="form-control" id="contact_name" name="contact_name">
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email">
+        </div>
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Téléphone</label>
+            <input type="tel" class="form-control" id="phone" name="phone">
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="address" class="form-label">Adresse</label>
+            <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="tax_id" class="form-label">Identifiant Fiscal</label>
+            <input type="text" class="form-control" id="tax_id" name="tax_id">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <a href="{{ url_for('billing.manage_clients') }}" class="btn btn-secondary">
+                <i data-feather="arrow-left"></i> Annuler
+            </a>
+        </div>
+        <div class="col-md-6 text-end">
+            <button type="submit" class="btn btn-primary">
+                <i data-feather="save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

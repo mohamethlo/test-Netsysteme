@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Historique des approvisionnements - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i data-feather="list"></i> Historique des approvisionnements</h4>
+                </div>
+                <div class="card-body">
+                    {% if approvisionnements %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date & Heure</th>
+                                    <th>Site</th>
+                                    <th>Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appro in approvisionnements %}
+                                <tr>
+                                    <td>
+                                        {% if appro.date %}
+                                            {{ appro.date.strftime('%d/%m/%Y %H:%M:%S') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ appro.site }}</td>
+                                    <td><strong>{{ "%.0f"|format(appro.montant) }} Fcfa</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="list" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucun approvisionnement enregistré</p>
+                    </div>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

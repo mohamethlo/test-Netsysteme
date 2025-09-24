@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Mon profil - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="user"></i>
+                    Mon profil
+                </h2>
+            </div>
+            
+            <!-- Profile Overview -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
+                    </div>
+                    <h4>{{ current_user.prenom }} {{ current_user.nom }}</h4>
+                    <p class="text-muted">{{ current_user.email }}</p>
+                    <span class="badge {% if current_user.role.name == 'Administrateur' %}bg-danger{% elif current_user.role.name == 'Commercial' %}bg-success{% else %}bg-warning{% endif %}">
+                        {{ current_user.role.name }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Account Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="info"></i>
+                        Informations du compte
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" value="{{ current_user.username }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date de création</label>
+                            <input type="text" class="form-control" value="{{ current_user.created_at.strftime('%d/%m/%Y') }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Dernière connexion</label>
+                            <input type="text" class="form-control" value="{% if current_user.last_login %}{{ current_user.last_login.strftime('%d/%m/%Y %H:%M') }}{% else %}Première connexion{% endif %}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Statut</label>
+                            <input type="text" class="form-control" value="{% if current_user.is_active %}Actif{% else %}Inactif{% endif %}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Permissions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="shield"></i>
+                        Mes permissions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.role.permissions == 'all' %}
+                        <span class="badge bg-danger">Toutes les permissions (Administrateur)</span>
+                        <p class="text-muted mt-2">Vous avez accès à toutes les fonctionnalités de l'application.</p>
+                    {% else %}
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            {% for permission in current_user.role.permissions.split(',') if current_user.role.permissions %}
+                                {% if permission == 'attendance' %}
+                                    <span class="badge bg-primary">Pointage</span>
+                                {% elif permission == 'interventions' %}
+                                    <span class="badge bg-warning">Interventions</span>
+                                {% elif permission == 'inventory' %}
+                                    <span class="badge bg-info">Stock</span>
+                                {% elif permission == 'expenses' %}
+                                    <span class="badge bg-success">Dépenses</span>
+                                {% elif permission == 'clients' %}
+                                    <span class="badge bg-secondary">Clients</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">{{ permission }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="text-muted">Ces permissions déterminent les sections auxquelles vous avez accès.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Edit Profile -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="edit"></i>
+                        Modifier mes informations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('main.update_profile') }}" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="prenom" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="prenom" name="prenom" value="{{ current_user.prenom }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="nom" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="nom" name="nom" value="{{ current_user.nom }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="telephone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="telephone" name="telephone" value="{{ current_user.telephone or '' }}">
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6>Changer le mot de passe</h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="current_password" class="form-label">Mot de passe actuel</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password">
+                                <div class="form-text">Laissez vide si vous ne souhaitez pas changer le mot de passe</div>
+                            </div>
+                            <div class="col-12">
+                                <label for="new_password" class="form-label">Nouveau mot de passe</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" minlength="6">
+                                <div class="form-text">Minimum 6 caractères</div>
+                            </div>
+                            <div class="col-12">
+                                <label for="confirm_password" class="form-label">Confirmer le nouveau mot de passe</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i>
+                                Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Password confirmation validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = this.value;
+    
+    if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+        this.setCustomValidity('Les mots de passe ne correspondent pas');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// New password validation
+document.getElementById('new_password').addEventListener('input', function() {
+    const currentPassword = document.getElementById('current_password').value;
+    const newPassword = this.value;
+    
+    if (newPassword && !currentPassword) {
+        document.getElementById('current_password').setCustomValidity('Mot de passe actuel requis');
+        document.getElementById('current_password').classList.add('is-invalid');
+    } else {
+        document.getElementById('current_password').setCustomValidity('');
+        document.getElementById('current_password').classList.remove('is-invalid');
+    }
+    
+    // Trigger confirm password validation
+    const confirmPassword = document.getElementById('confirm_password');
+    if (confirmPassword.value) {
+        confirmPassword.dispatchEvent(new Event('input'));
+    }
+});
+
+// Current password validation
+document.getElementById('current_password').addEventListener('input', function() {
+    const newPassword = document.getElementById('new_password').value;
+    
+    if (this.value && !newPassword) {
+        document.getElementById('new_password').setCustomValidity('Nouveau mot de passe requis');
+        document.getElementById('new_password').classList.add('is-invalid');
+    } else {
+        document.getElementById('new_password').setCustomValidity('');
+        document.getElementById('new_password').classList.remove('is-invalid');
+    }
+});
+
+// Form submission validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const currentPassword = document.getElementById('current_password').value;
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if ((currentPassword || newPassword) && (!currentPassword || !newPassword || !confirmPassword)) {
+        e.preventDefault();
+        alert('Veuillez remplir tous les champs de mot de passe ou aucun.');
+        return;
+    }
+    
+    if (newPassword && newPassword !== confirmPassword) {
+        e.preventDefault();
+        alert('Les mots de passe ne correspondent pas.');
+        return;
+    }
+});
+</script>
+{% endblock %}

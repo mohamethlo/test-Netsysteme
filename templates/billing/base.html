@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Facturation - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-0">
+        <!-- Sidebar améliorée -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
+            <div class="d-flex flex-column h-100">
+                <div class="sidebar-header p-4 text-center border-bottom border-secondary">
+                    <h4 class="text-white mb-0">
+                        <i data-feather="dollar-sign" class="me-2"></i>Facturation
+                    </h4>
+                </div>
+                
+                <div class="flex-grow-1 p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-2">
+                            <a class="nav-link {% if request.endpoint == 'billing.billing_dashboard' %}active{% endif %}" 
+                               href="{{ url_for('billing.billing_dashboard') }}">
+                                <i data-feather="home" class="me-2"></i> Accueil
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link {% if request.endpoint in ['billing.manage_clients', 'billing.add_client'] %}active{% endif %}" 
+                               href="{{ url_for('billing.manage_clients') }}">
+                                <i data-feather="users" class="me-2"></i> Clients
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link {% if request.endpoint in ['billing.manage_products', 'billing.add_product'] %}active{% endif %}" 
+                               href="{{ url_for('billing.manage_products') }}">
+                                <i data-feather="package" class="me-2"></i> Produits
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link {% if request.endpoint in ['billing.manage_invoices', 'billing.new_invoice', 'billing.view_invoice'] %}active{% endif %}" 
+                               href="{{ url_for('billing.manage_invoices') }}">
+                                <i data-feather="file-text" class="me-2"></i> Factures
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint in ['billing.manage_proformas', 'billing.new_proforma', 'billing.view_proforma'] %}active{% endif %}" 
+                               href="{{ url_for('billing.manage_proformas') }}">
+                                <i data-feather="file" class="me-2"></i> Proformas
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                
+            </div>
+        </div>
+
+        <!-- Main content amélioré -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-0">
+            <!-- Top bar -->
+            <div class="top-bar bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center">
+                <button class="btn btn-link d-md-none" type="button" data-bs-toggle="collapse" data-bs-target=".sidebar">
+                    <i data-feather="menu" class="feather-lg"></i>
+                </button>
+                
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="container-fluid py-4 px-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                <i data-feather="{% if category == 'success' %}check-circle{% elif category == 'danger' %}alert-circle{% else %}info{% endif %}" class="me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block billing_content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    /* Sidebar améliorée */
+    .sidebar {
+        background: linear-gradient(135deg, #1a2a3a 0%, #0d1b2a 100%);
+        min-height: 100vh;
+        transition: all 0.3s;
+        box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.25rem;
+        transition: all 0.3s;
+    }
+    
+    .sidebar .nav-link:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+    
+    .sidebar .nav-link.active {
+        background: rgba(13, 110, 253, 0.2);
+        color: white;
+        font-weight: 500;
+    }
+    
+    .sidebar .nav-link i {
+        width: 20px;
+        text-align: center;
+    }
+    
+    /* Top bar */
+    .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Effets généraux */
+    .feather-lg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 767.98px) {
+        .sidebar {
+            position: fixed;
+            z-index: 1040;
+            width: 280px;
+            margin-left: -280px;
+        }
+        
+        .sidebar.show {
+            margin-left: 0;
+        }
+    }
+</style>
+
+<script>
+    // Initialisation des icônes Feather et gestion du menu mobile
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+        
+        // Gestion du toggle du menu mobile
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarToggle = document.querySelector('[data-bs-target=".sidebar"]');
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+        }
+    });
+</script>
+{% endblock %}

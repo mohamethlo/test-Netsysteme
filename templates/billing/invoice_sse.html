@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture #{{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+            font-size: 18px;
+            color: #000;
+            background-color: white;
+        }
+        .page {
+            page-break-after: always;
+            position: relative;
+            min-height: 29.7cm;
+            padding-bottom: 150px;
+        }
+        .last-page {
+            page-break-after: auto;
+        }
+        .header-container {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .logo-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-header img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+
+        .client-section,
+        .facture-section,
+        .delivery-section {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding: 0 10px;
+            margin-top: 40px;
+        }
+        .client-section {
+            text-align: left;
+        }
+
+        .facture-section {
+            text-align: right;
+        }
+
+        /* .client-section {
+            width: 50%;
+            color: #3064d6;
+            font-weight: bold;
+            font-size: 16px;
+        } */
+        .client-section .name {
+            font-size: 18px;
+            color: #000;
+            font-weight: bold;
+            margin-top: 0;
+            padding-top: 0;
+        }
+        
+        .delivery-section {
+            
+            text-align: right;
+        }
+        .facture-header, .delivery-header, .client_header {
+            color: #3064d6;
+            font-size: 35px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .separator {
+            border-top: 1px solid #3064d6;
+            border-bottom: 1px solid #3064d6;
+            height: 3px;
+            margin: 5px 0 20px;
+            background-color: #3064d6;
+            position: relative;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px;
+            vertical-align: top;
+            border-left: none;
+            border-right: none;
+        }
+        thead th {
+            background-color: #e0e0e0;
+            color: #000;
+            font-weight: bold;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+        }
+        thead th:first-child {
+            border-top-left-radius: 8px;
+            text-align: left;
+        }
+        thead th:nth-child(2) {
+            text-align: center;
+        }
+        thead th:nth-child(3), 
+        thead th:nth-child(4) {
+            text-align: right;
+        }
+        thead th:last-child {
+            border-top-right-radius: 8px;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #f5f5f5;
+        }
+        tbody td:nth-child(3),
+        tbody td:nth-child(4) {
+            text-align: right;
+        }
+        tbody tr:last-child td {
+            border-bottom: 1px solid #ccc;
+        }
+        tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+        }
+        tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
+        }
+        .total-row {
+            font-weight: bold;
+            text-align: right;
+        }
+        .total-row td:first-child {
+            text-align: left;
+        }
+        .total-ttc {
+            color: #3064d6;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .delivery {
+            margin-top: 40px;
+            background-color: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .delivery-info-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .delivery-title {
+            font-size: 18px;
+            color: #3064d6;
+            margin: 0;
+        }
+        .delivery-info {
+            text-align: right;
+            font-size: 14px;
+        }
+        .delivery table {
+            border-radius: 8px;
+            width: 100%;
+        }
+        .delivery thead th {
+            background-color: #e0e0e0;
+        }
+        .delivery tbody tr:nth-child(odd) {
+            background-color: #e6f4fb;
+        }
+        .signature-zone {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 45%;
+            text-align: center;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+        }
+        .footer-notes {
+            margin-top: 40px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .notes-title {
+            color: #3064d6;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+        .notes-separator {
+            border-top: 1px solid #3064d6;
+            border-bottom: 1px solid #3064d6;
+            height: 3px;
+            margin: 5px 0 10px;
+            background-color: #3064d6;
+        }
+        .notes-content {
+            color: #000;
+        }
+        .cachet {
+            position: relative;
+            bottom: 180px;
+            left: 50px;
+            width: 250px;
+           
+            opacity: 0.8;
+            z-index: 10;
+        }
+        .footer-img {
+            text-align: center;
+            margin-top: 40px;
+            
+            object-fit: contain;
+        }
+
+        .footer-img img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .content-wrap {
+            margin-bottom: 200px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Première page - Facture -->
+<div class="page">
+    <div class="content-wrap">
+        <div class="logo-header">
+            <img src="{{ url_for('static', filename='img/logo_sse.PNG', _external=True) }}" alt="Logo SSE">
+        </div>
+
+        <div class="header-container">
+            <div class="client-section">
+              <div class="client_header">
+                CLIENT
+              </div>  
+                <div class="separator"></div>
+                <div class="name">
+                    {{ invoice.billing_client.company_name if invoice.billing_client.company_name else '' }}<br>
+                    {% if invoice.billing_client.company_name and invoice.billing_client.contact_name %}
+                        {{ invoice.billing_client.contact_name }}<br>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="facture-section">
+                <div class="facture-header">FACTURE</div>
+                <div class="facture-info">
+                    Numéro : #{{ invoice.invoice_number }}<br>
+                    Date : {{ invoice.date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Désignation</th>
+                <th>Qté</th>
+                <th style="text-align: right;">P. Unit</th>
+                <th style="text-align: right;">Total HT</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(item.unit_price) }} Fcfa</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(item.unit_price * item.quantity) }} Fcfa</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td></td>
+                <td></td>
+                <td>Total HT</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(invoice.total_amount()) }} Fcfa</td>
+            </tr>
+            <tr class="total-row">
+                <td></td>
+                <td></td>
+                <td>TVA ({{ "{:.0f}".format(invoice.tax_rate * 100) }}%)</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(invoice.tax_amount()) }} Fcfa</td>
+            </tr>
+            <tr class="total-row total-ttc">
+                <td></td>
+                <td></td>
+                <td>Total TTC</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(invoice.total_with_tax()) }} Fcfa</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <img class="cachet" src="{{ url_for('static', filename='img/CachetSSE.PNG', _external=True) }}" alt="Cachet de l'entreprise">
+    <div class="footer-img">
+        <img src="{{ url_for('static', filename='img/footer_sse.PNG', _external=True) }}" alt="Footer SSE">
+    </div>
+</div>
+
+<!-- Deuxième page - Bordereau -->
+<div class="page">
+    <div class="content-wrap">
+        <div class="logo-header">
+            <img src="{{ url_for('static', filename='img/logo_sse.PNG', _external=True) }}" alt="Logo SSE">
+        </div>
+
+        <div class="header-container">
+            <div class="client-section">
+                <div class="client_header">
+                    CLIENT
+                </div>
+                <div class="separator"></div>
+                <div class="name">
+                    {{ invoice.billing_client.company_name if invoice.billing_client.company_name else '' }}<br>
+                    {% if invoice.billing_client.company_name and invoice.billing_client.contact_name %}
+                        {{ invoice.billing_client.contact_name }}<br>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="delivery-section">
+                <div class="delivery-header">BORDEREAU<br>DE LIVRAISON</div>
+                <div class="facture-info">
+                    Numéro : #{{ invoice.invoice_number }}<br>
+                    Date du : {{ invoice.date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+
+        <div class="delivery">
+            <table>
+                <thead>
+                <tr>
+                    <th>Qté</th>
+                    <th>Désignation</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in invoice.items %}
+                <tr>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.description }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            
+        </div>
+    </div>
+
+    <img class="cachet" src="{{ url_for('static', filename='img/CachetSSE.PNG', _external=True) }}" alt="Cachet de l'entreprise">
+    <div class="footer-img">
+        <img src="{{ url_for('static', filename='img/footer_sse.PNG', _external=True) }}" alt="Footer SSE">
+    </div>
+</div>
+
+<!-- Troisième page - Notes -->
+<div class="page last-page">
+    <div class="content-wrap">
+        <div class="footer-notes">
+            <div class="notes-title">NOTES :</div>
+            <div class="notes-separator"></div>
+            <div class="notes-content">
+                Tous appareils vendus sont garantis pour une période de 01 an à compter de la date d'installation. Il 
+                est formellement convenu que la garantie contre les vices cachés de la chose vendue prévue par 
+                l'article 287 du COCC est exclue dans les cas suivants : 
+                <ol>
+                    <li>En cas de choc ou de démontage de l'appareil et de manipulation par l'acheteur ou un tiers</li>
+                    <li>En cas de panne due à une surtension électrique</li>
+                    <li>En cas d'utilisation de l'appareil dans des conditions incompatibles avec celles prévues par le fabricant</li>
+                </ol>
+                Un service après-vente expérimenté, compétent et dynamique est à votre disposition pour le 
+                suivi, contrôle et l'entretien de l'ensemble des appareils que nous commercialisons.<br><br>
+                Merci pour la confiance.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-img">
+        <img src="{{ url_for('static', filename='img/footer_sse.PNG', _external=True) }}" alt="Footer SSE">
+    </div>
+</div>
+
+</body>
+</html>

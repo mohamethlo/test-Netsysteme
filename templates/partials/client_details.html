@@ -1,0 +1,29 @@
+<div>
+    <h5>
+        {{ client.nom }}{% if client.prenom %} {{ client.prenom }}{% endif %}
+    </h5>
+    {% if client.entreprise %}
+        <p><strong>Entreprise :</strong> {{ client.entreprise }}</p>
+    {% endif %}
+    {% if client.email %}
+        <p><strong>Email :</strong> {{ client.email }}</p>
+    {% endif %}
+    {% if client.telephone %}
+        <p><strong>Téléphone :</strong> {{ client.telephone }}</p>
+    {% endif %}
+    {% if client.adresse %}
+        <p><strong>Adresse :</strong> {{ client.adresse }}</p>
+    {% endif %}
+    {% if client.ville %}
+        <p><strong>Ville :</strong> {{ client.ville }}</p>
+    {% endif %}
+    {% if client.code_postal %}
+        <p><strong>Code postal :</strong> {{ client.code_postal }}</p>
+    {% endif %}
+    {% if client.type_client %}
+        <p><strong>Type :</strong> {{ client.type_client|capitalize }}</p>
+    {% endif %}
+    {% if client.created_at %}
+        <p><strong>Date création :</strong> {{ client.created_at.strftime('%d/%m/%Y') }}</p>
+    {% endif %}
+</div>

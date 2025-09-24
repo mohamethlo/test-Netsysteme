@@ -1,0 +1,3 @@
+id,proforma_id,description,quantity,unit_price,tax_rate,product_id,discount_percent
+1,1,Designation,1.0,20000.0,,1,0.0
+2,2,Caméra surveillance,1.0,20000.0,,1,0.0

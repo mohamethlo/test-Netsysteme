@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier client - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Modifier le client</h4>
+                </div>
+                <form action="{{ url_for('main.edit_client', client_id=client.id) }}" method="POST">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nom" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="nom" name="nom" value="{{ client.nom }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="prenom" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="prenom" name="prenom" value="{{ client.prenom }}">
+                            </div>
+                            <div class="col-md-8">
+                                <label for="entreprise" class="form-label">Entreprise</label>
+                                <input type="text" class="form-control" id="entreprise" name="entreprise" value="{{ client.entreprise }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="type_client" class="form-label">Type</label>
+                                <select class="form-select" id="type_client" name="type_client">
+                                    <option value="prospect" {% if client.type_client == 'prospect' %}selected{% endif %}>Prospect</option>
+                                    <option value="client" {% if client.type_client == 'client' %}selected{% endif %}>Client</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ client.email }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telephone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="telephone" name="telephone" value="{{ client.telephone }}">
+                            </div>
+                            <div class="col-12">
+                                <label for="adresse" class="form-label">Adresse</label>
+                                <textarea class="form-control" id="adresse" name="adresse" rows="2">{{ client.adresse }}</textarea>
+                            </div>
+                            <div class="col-md-8">
+                                <label for="ville" class="form-label">Ville</label>
+                                <input type="text" class="form-control" id="ville" name="ville" value="{{ client.ville }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="code_postal" class="form-label">Code postal</label>
+                                <input type="text" class="form-control" id="code_postal" name="code_postal" value="{{ client.code_postal }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a href="{{ url_for('main.clients') }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

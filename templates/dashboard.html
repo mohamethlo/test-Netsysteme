@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="home"></i>
+                    Tableau de bord
+                </h2>
+                <span class="badge bg-primary">{{ current_user.role.name }}</span>
+                <button class="btn btn-outline-success ms-2" data-bs-toggle="modal" data-bs-target="#calendarModal">
+                    <i data-feather="calendar"></i>
+                    Calendrier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions - Déplacé en haut -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-light">
+                    <h4 class="fw-bold mb-0">
+                        <i data-feather="zap" class="me-2"></i>
+                        Actions rapides
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% if current_user.has_permission('attendance') %}
+                        <div class="col-md-6 col-lg-3">
+                            <a href="{{ url_for('main.attendance') }}"
+                                class="card h-100 text-decoration-none hover-effect">
+                                <div class="card-body text-center">
+                                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                        <i data-feather="clock" class="text-primary"
+                                            style="width: 24px; height: 24px;"></i>
+                                    </div>
+                                    <h6 class="mb-1">Pointage</h6>
+                                    <p class="text-muted small mb-0">Enregistrer votre présence</p>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if current_user.has_permission('interventions') %}
+                        <div class="col-md-6 col-lg-3">
+                            <a href="{{ url_for('main.interventions') }}"
+                                class="card h-100 text-decoration-none hover-effect">
+                                <div class="card-body text-center">
+                                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                        <i data-feather="tool" class="text-warning"
+                                            style="width: 24px; height: 24px;"></i>
+                                    </div>
+                                    <h6 class="mb-1">Interventions</h6>
+                                    <p class="text-muted small mb-0">Planifier et suivre</p>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if current_user.has_permission('clients') %}
+                        <div class="col-md-6 col-lg-3">
+                            <a href="{{ url_for('main.clients') }}"
+                                class="card h-100 text-decoration-none hover-effect">
+                                <div class="card-body text-center">
+                                    <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                        <i data-feather="users" class="text-success"
+                                            style="width: 24px; height: 24px;"></i>
+                                    </div>
+                                    <h6 class="mb-1">Clients</h6>
+                                    <p class="text-muted small mb-0">Gérer votre clientèle</p>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if current_user.has_permission('work_locations') %}
+                        <div class="col-md-6 col-lg-3">
+                            <a href="{{ url_for('main.work_locations') }}"
+                                class="card h-100 text-decoration-none hover-effect">
+                                <div class="card-body text-center">
+                                    <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                                        <i data-feather="map-pin" class="text-info"
+                                            style="width: 24px; height: 24px;"></i>
+                                    </div>
+                                    <h6 class="mb-1">Chantiers</h6>
+                                    <p class="text-muted small mb-0">Gérer les chantiers</p>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classement des commerciaux par implication (notes d'observation) -->
+    {% if current_user.role.name == 'Administrateur' and top_commerciaux %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-light">
+                    <strong>Classement des commerciaux par implication</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-pills flex-column" id="commerciauxTab" role="tablist">
+                        {% for user, nb_notes in top_commerciaux %}
+                        <li class="nav-item mb-2" role="presentation">
+                            <button class="nav-link w-100 {% if loop.first %}active{% endif %}" id="tab-{{ user.id }}"
+                                data-bs-toggle="pill" data-bs-target="#notes-{{ user.id }}" type="button" role="tab"
+                                aria-controls="notes-{{ user.id }}"
+                                aria-selected="{{ 'true' if loop.first else 'false' }}">
+                                <span class="fw-bold">{{ user.prenom }} {{ user.nom }}</span>
+                                <span class="badge bg-primary ms-2">{{ nb_notes }} notes</span>
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-light">
+                    <strong>Notes d'observation du commercial</strong>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="commerciauxTabContent">
+                        {% for user, nb_notes in top_commerciaux %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="notes-{{ user.id }}"
+                            role="tabpanel" aria-labelledby="tab-{{ user.id }}">
+                            {% if user.notes %}
+                            {% set total_notes = user.notes|length %}
+                            {% set page_size = 5 %}
+                            <ul class="list-group" id="notes-list-{{ user.id }}">
+                                {% for note in user.notes[:page_size] %}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i data-feather="file-text" class="me-1"></i>
+                                            {{ note.texte }}
+                                            {% if note.client %}
+                                                <span class="text-muted ms-2">[{{ note.client.nom }}]</span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="badge bg-secondary">{{ note.date }}</span>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% if total_notes > page_size %}
+                            <div class="mt-2">
+                                <button class="btn btn-outline-primary btn-sm"
+                                    onclick="showMoreNotes('{{ user.id }}')" id="show-more-{{ user.id }}">Voir plus</button>
+                                <button class="btn btn-outline-secondary btn-sm"
+                                    onclick="showLessNotes('{{ user.id }}')" id="show-less-{{ user.id }}"
+                                    style="display:none;">Voir moins</button>
+                            </div>
+                            {% endif %}
+                            <script>
+                                window['showNotes_{{ user.id }}_index'] = {{ page_size }};
+                                function showMoreNotes(userId) {
+                                    var index = window['showNotes_' + userId + '_index'];
+                                    var notes = {{ user.notes|tojson }};
+                                    var list = document.getElementById('notes-list-' + userId);
+                                    for (var i = index; i < index + 5 && i < notes.length; i++) {
+                                        var li = document.createElement('li');
+                                        li.className = "list-group-item";
+                                        li.innerHTML = `<div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i data-feather="file-text" class="me-1"></i>
+                                                ${notes[i].texte}
+                                                ${notes[i].client ? `<span class="text-muted ms-2">[${notes[i].client.nom}]</span>` : ''}
+                                            </div>
+                                            <span class="badge bg-secondary">${notes[i].date}</span>
+                                        </div>`;
+                                        list.appendChild(li);
+                                    }
+                                    window['showNotes_' + userId + '_index'] += 5;
+                                    document.getElementById('show-less-' + userId).style.display = 'inline-block';
+                                    if (window['showNotes_' + userId + '_index'] >= notes.length) {
+                                        document.getElementById('show-more-' + userId).style.display = 'none';
+                                    }
+                                    if (window.feather) feather.replace();
+                                }
+                                function showLessNotes(userId) {
+                                    var list = document.getElementById('notes-list-' + userId);
+                                    while (list.children.length > {{ page_size }}) {
+                                        list.removeChild(list.lastChild);
+                                    }
+                                    window['showNotes_' + userId + '_index'] = {{ page_size }};
+                                    document.getElementById('show-more-' + userId).style.display = 'inline-block';
+                                    document.getElementById('show-less-' + userId).style.display = 'none';
+                                    if (window.feather) feather.replace();
+                                }
+                            </script>
+                            {% else %}
+                            <div class="text-muted">Aucune note d'observation</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Cartes de Statistiques Rapides -->
+    <div class="row g-4 mb-4">
+        {% if current_user.has_permission('attendance') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                            <i data-feather="clock" class="text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Pointage aujourd'hui</h6>
+                            <p class="text-muted mb-0">
+                                {% if stats.today_attendance and stats.today_attendance.check_in %}
+                                <span class="badge bg-success">Pointé</span>
+                                {% else %}
+                                <span class="badge bg-warning">Non pointé</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded">
+                            <i data-feather="calendar" class="text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Présences ce mois</h6>
+                            <h4 class="mb-0">{{ stats.monthly_attendance or 0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_user.has_permission('interventions') %}
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('main.interventions', date='today') }}" style="text-decoration:none;">
+                <div class="card shadow-sm border-0 h-100 hover-effect" style="cursor:pointer;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                                <i data-feather="tool" class="text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">Interventions aujourd'hui</h6>
+                                <h4 class="mb-0">{{ stats.today_interventions or 0 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('main.interventions', status='planifiee') }}" style="text-decoration:none;">
+                <div class="card shadow-sm border-0 h-100 hover-effect" style="cursor:pointer;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded">
+                                <i data-feather="clock" class="text-danger"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">En attente</h6>
+                                <h4 class="mb-0">{{ stats.pending_interventions or 0 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
+
+        {% if current_user.has_permission('clients') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100 clickable-card" data-bs-toggle="modal"
+                data-bs-target="#clientsModal" style="cursor:pointer;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded">
+                            <i data-feather="users" class="text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Total clients</h6>
+                            <h4 class="mb-0">{{ stats.total_clients or 0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded">
+                            <i data-feather="user-plus" class="text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Prospects</h6>
+                            <h4 class="mb-0">{{ stats.prospects or 0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_user.has_permission('inventory') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded">
+                            <i data-feather="alert-triangle" class="text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Stock faible</h6>
+                            <h4 class="mb-0">{{ stats.low_stock_items or 0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('main.notifications') }}" style="text-decoration:none;">
+                <div class="card shadow-sm border-0 h-100 hover-effect" style="cursor:pointer;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded">
+                                <i data-feather="mail" class="text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">Messages non lus</h6>
+                                <h4 class="mb-0">{{ stats.unread_messages or 0 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <!-- Modal pour afficher les clients convertis -->
+    <div class="modal fade" id="clientsModal" tabindex="-1" aria-labelledby="clientsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clientsModalLabel">Clients convertis</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body" id="clientsModalBody">
+                    <div class="text-center my-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Calendrier -->
+    <div class="modal fade" id="calendarModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Calendrier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Section Statistiques Commerciales -->
+    {% if current_user.has_permission('all') and stats.stats_commerciaux %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white position-relative">
+                    <h4 class="fw-bold mb-0">
+                        <i data-feather="bar-chart-2" class="me-2"></i>
+                        Performance Commerciale
+                    </h4>
+
+                    <!-- Message clignotant pour le top performer -->
+                    {% if stats.stats_commerciaux|length > 1 %}
+                    {% set top_commercial = stats.stats_commerciaux[0] %}
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <div class="blinking-badge bg-warning text-dark p-2 rounded-pill shadow-sm">
+                            <div class="d-flex align-items-center">
+                                <span class="avatar-circle fw-bold me-2"
+                                    style="background:#fff;color:var(--bs-warning);font-size:0.8rem;">
+                                    {{ top_commercial.prenom[0]|upper }}{{ top_commercial.nom[0]|upper }}
+                                </span>
+                                <span class="me-2 fw-bold">TOP VENDEUR</span>
+                                <i data-feather="award" class="text-danger" style="width:16px;height:16px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <!-- Bannière du meilleur commercial -->
+                    {% if stats.stats_commerciaux|length > 1 %}
+                    {% set top_commercial = stats.stats_commerciaux[0] %}
+                    <div class="alert alert-warning bg-gradient-warning border-0 mb-4 d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i data-feather="award" class="feather-lg text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">
+                                Félicitations à {{ top_commercial.prenom }} {{ top_commercial.nom }} !
+                            </h5>
+                            <p class="mb-0">
+                                Meilleur taux de conversion ce mois avec {{ top_commercial.taux }}%
+                                ({{ top_commercial.nb_convertis }} clients convertis)
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0 ms-3">
+                            <span class="badge bg-white text-warning rounded-pill pulse-animation">
+                                <i class="fas fa-trophy me-1"></i> N°1
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Commercial</th>
+                                    <th>Prospects</th>
+                                    <th>Clients convertis</th>
+                                    <th>Taux de conversion</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in stats.stats_commerciaux %}
+                                <tr {% if loop.first and stats.stats_commerciaux|length>1 %}class="table-success"{%
+                                    endif %}>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar-circle fw-bold me-3"
+                                                style="background:var(--bs-primary);color:#fff;">
+                                                {{ c.prenom[0]|upper }}{{ c.nom[0]|upper }}
+                                            </span>
+                                            <div>
+                                                <div class="fw-bold">{{ c.prenom }} {{ c.nom }}</div>
+                                                <small class="text-muted">{{ c.equipe or 'Équipe commerciale' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ c.nb_prospects }}</td>
+                                    <td><span class="badge bg-success">{{ c.nb_convertis }}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar bg-primary" role="progressbar"
+                                                    style="width: {{ c.taux }}%;" aria-valuenow="{{ c.taux }}"
+                                                    aria-valuemin="0" aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <small class="ms-2">{{ c.taux }}%</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if loop.first and stats.stats_commerciaux|length>1 %}
+                                        <span class="badge bg-success">TOP VENDEUR</span>
+                                        {% elif c.taux > 70 %}
+                                        <span class="badge bg-info">Excellent</span>
+                                        {% elif c.taux > 50 %}
+                                        <span class="badge bg-primary">Bon</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">À améliorer</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section Statistiques Techniques -->
+    {% if current_user.has_permission('all') and stats.technicien_stats %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="fw-bold mb-0">
+                        <i data-feather="users" class="me-2"></i>
+                        Performance des Techniciens
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-center mb-4">Assiduité</h5>
+                            <canvas id="technicianPie" height="250"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-center mb-4">Interventions complétées</h5>
+                            <canvas id="technicianBars" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Modal Création Événement Calendrier -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="eventForm" autocomplete="off">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="eventModalLabel">Événement calendrier</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="eventId" name="eventId">
+                        <div class="mb-3">
+                            <label for="eventTitle" class="form-label">Titre de l'événement</label>
+                            <input type="text" class="form-control" id="eventTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="eventDate" name="date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventTime" class="form-label">Heure</label>
+                            <input type="time" class="form-control" id="eventTime" name="time">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger me-auto" id="deleteEventBtn"
+                            style="display:none;">Supprimer</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary" id="saveEventBtn">Enregistrer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<!-- Scripts Graphiques -->
+{% if current_user.has_permission('all') and stats.technicien_stats %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Graphique circulaire (assiduité)
+    new Chart(document.getElementById('technicianPie'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ stats.technicien_stats | map(attribute = 'prenom') | list | tojson }},
+        datasets: [{
+            data: {{ stats.technicien_stats | selectattr('taux', 'defined') | map(attribute = 'taux') | list | tojson }},
+        backgroundColor: [
+            '#0d6efd', '#6f42c1', '#fd7e14', '#20c997', '#dc3545', '#ffc107', '#198754', '#6610f2'
+        ],
+        borderWidth: 1,
+        hoverOffset: 10
+            }]
+        },
+        options: {
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12,
+                    padding: 20
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        return `${context.label}: ${context.raw}% de présence`;
+                    }
+                }
+            }
+        },
+        cutout: '65%'
+    }
+    });
+
+    // Graphique à barres (performance)
+    new Chart(document.getElementById('technicianBars'), {
+        type: 'bar',
+        data: {
+            labels: {{ stats.technicien_stats | map(attribute = 'prenom') | list | tojson }},
+        datasets: [{
+            label: 'Interventions complétées',
+            data: {{ stats.technicien_stats | selectattr('interventions', 'defined') | map(attribute = 'interventions') | list | tojson }},
+        backgroundColor: '#0d6efd',
+        borderRadius: 4
+            }]
+        },
+        options: {
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var clientsModal = document.getElementById('clientsModal');
+        clientsModal.addEventListener('show.bs.modal', function () {
+            fetch('{{ url_for("main.converted_clients_list") }}')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('clientsModalBody').innerHTML = html;
+                });
+        });
+    });
+</script>
+{% endif %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        var selectedDate = null;
+        var currentEvent = null;
+
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: '/api/calendar/events',
+                dateClick: function (info) {
+                    selectedDate = info.dateStr;
+                    document.getElementById('eventId').value = '';
+                    document.getElementById('eventTitle').value = '';
+                    document.getElementById('eventDate').value = selectedDate;
+                    document.getElementById('eventTime').value = '';
+                    document.getElementById('deleteEventBtn').style.display = 'none';
+                    document.getElementById('saveEventBtn').textContent = 'Créer';
+                    var modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                    modal.show();
+                    currentEvent = null;
+                },
+                eventClick: function (info) {
+                    currentEvent = info.event;
+                    document.getElementById('eventId').value = info.event.id;
+                    document.getElementById('eventTitle').value = info.event.title;
+                    document.getElementById('eventDate').value = info.event.startStr.split('T')[0];
+                    document.getElementById('eventTime').value = info.event.allDay ? '' : (info.event.startStr.split('T')[1]?.slice(0, 5) || '');
+                    document.getElementById('deleteEventBtn').style.display = 'inline-block';
+                    document.getElementById('saveEventBtn').textContent = 'Enregistrer';
+                    var modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                    modal.show();
+                }
+            });
+
+            $('#calendarModal').on('shown.bs.modal', function () {
+                calendar.render();
+            });
+
+            // Création/édition événement
+            document.getElementById('eventForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const title = document.getElementById('eventTitle').value;
+                const date = document.getElementById('eventDate').value;
+                const time = document.getElementById('eventTime').value;
+                let start = date;
+                let allDay = true;
+                if (time) {
+                    start += 'T' + time;
+                    allDay = false;
+                }
+                const eventId = document.getElementById('eventId').value;
+                const payload = {
+                    title: title,
+                    start: start,
+                    allDay: allDay
+                };
+                if (eventId) {
+                    // Edition
+                    fetch(`/api/calendar/events/${eventId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => response.json())
+                        .then(event => {
+                            if (currentEvent) {
+                                currentEvent.setProp('title', event.title);
+                                currentEvent.setStart(event.start);
+                                currentEvent.setAllDay(event.allDay);
+                            }
+                            bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                        });
+                } else {
+                    // Création
+                    fetch('/api/calendar/events', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => response.json())
+                        .then(event => {
+                            calendar.addEvent(event);
+                            bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                        });
+                }
+            });
+
+            // Suppression événement
+            document.getElementById('deleteEventBtn').addEventListener('click', function () {
+                const eventId = document.getElementById('eventId').value;
+                if (eventId && confirm("Supprimer cet événement ?")) {
+                    fetch(`/api/calendar/events/${eventId}`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && currentEvent) {
+                                currentEvent.remove();
+                                bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                            }
+                        });
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    .hover-effect:hover {
+        transform: translateY(-5px);
+        transition: transform 0.2s ease;
+    }
+
+    .avatar-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+    }
+
+    /* Animation de clignotement */
+    .blinking-badge {
+        animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+            transform: scale(1.02);
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    /* Animation de pulsation */
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+        }
+    }
+
+    /* Dégradé de couleur pour la bannière */
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.1) 100%);
+    }
+</style>
+{% endblock %}

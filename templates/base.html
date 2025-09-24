@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestion Entreprise{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Leaflet for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- jQuery first -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Then Bootstrap -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
+    
+    <!-- Then DataTables and its extensions -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+    
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    
+    <!-- Export plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.13.7/sorting/date-eu.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Dépendances FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+</head>
+
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Modern Navbar Header (grand écran et responsive) -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm border-0 fixed-top"
+        style="backdrop-filter: blur(8px); background: rgba(20,24,28,0.95); z-index: 1050;">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.dashboard') }}">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo"
+                    style="height:auto;width:80px;object-fit:cover;"
+                    class="rounded-circle border border-2 border-primary shadow-sm bg-white">
+                <span class="fw-bold fs-4 d-none d-md-inline" style="letter-spacing:1px;">NETSYSTEME</span>
+            </a>
+
+            <div class="d-flex align-items-center gap-2">
+                <button id="themeToggleBtn" class="btn btn-outline-light rounded-circle p-2" type="button"
+                    title="Changer le thème" style="width:40px;height:40px;">
+                    <i id="themeIcon" data-feather="sun"></i>
+                </button>
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <!-- User dropdown moved here -->
+                <div class="dropdown">
+                    <a class="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
+                        href="#" role="button" data-bs-toggle="dropdown" style="width:40px;height:40px;">
+                        <span class="avatar-circle fw-bold"
+                            style="background:var(--bs-primary);color:#fff;font-size:1.1em;">
+                            {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li>
+                            <span class="dropdown-item-text fw-semibold text-primary">
+                                {{ current_user.prenom }} {{ current_user.nom }}
+                            </span>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                                <i data-feather="settings"></i> Profil
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                <i data-feather="log-out"></i> Déconnexion
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="collapse navbar-collapse mt-2 mt-lg-0" id="navbarNav">
+                <ul class="navbar-nav me-auto ms-lg-4 gap-lg-2">
+                    <!-- <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
+                            <i data-feather="home"></i> Tableau de bord
+                        </a>
+                    </li> -->
+                    {% if current_user.has_permission('attendance') 
+                        or current_user.has_permission('salary_advances') 
+                        or current_user.has_permission('work_locations') 
+                        or current_user.has_permission('all') %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.gestion_rh' %}active{% endif %}"
+                        href="{{ url_for('main.gestion_rh') }}">
+                            <i data-feather="users"></i> Gestion RH
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if current_user.has_permission('clients') 
+                        or current_user.has_permission('devis') 
+                        or current_user.has_permission('inventory') 
+                        or current_user.has_permission('all') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.gestion_commercial') }}">
+                            <i data-feather="shopping-cart"></i> Gestion Commercial
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if current_user.has_permission('expenses') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.gestion_comptable') }}">
+                            <i data-feather="credit-card"></i> Gestion Comptable
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if current_user.has_permission('interventions') 
+                        or current_user.has_permission('installations') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.gestion_interventions') }}">
+                            <i data-feather="tool"></i> Gestion Interventions
+                        </a>
+                    </li>
+                    {% endif %}
+                        
+                    
+
+                    {% if current_user.has_permission('facturation') %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.blueprint == 'billing.billing_dashboard' %}active{% endif %}" 
+                        href="{{ url_for('billing.billing_dashboard') }}">
+                            <i data-feather="dollar-sign"></i> Gestion Factures
+                        </a>
+                    </li>
+                    {% endif %}
+                  
+                    {% if current_user.has_permission('users') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.users') }}">
+                            <i data-feather="user-plus"></i>Gestion Utilisateurs
+                        </a>
+                    </li>
+
+                    {% endif %}
+                </ul>
+                <!-- <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                            <span class="d-none d-lg-inline"><i data-feather="user"></i></span>
+                            <span class="fw-semibold">{{ current_user.prenom }} {{ current_user.nom }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                                    <i data-feather="settings"></i> Profil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i data-feather="log-out"></i> Déconnexion
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul> -->
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="{% if current_user.is_authenticated %}container-lg mt-5{% endif %}">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+
+        // Gestion du thème
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlTag = document.documentElement;
+
+        function updateThemeIcon(theme) {
+            themeIcon.setAttribute('data-feather', theme === 'dark' ? 'moon' : 'sun');
+            feather.replace();
+        }
+        function toggleTheme() {
+            let currentTheme = htmlTag.getAttribute('data-bs-theme') || 'light';
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlTag.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            let savedTheme = localStorage.getItem('theme') || 'light';
+            htmlTag.setAttribute('data-bs-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        });
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', toggleTheme);
+        }
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Swal.fire({
+                        icon: "{{ 'success' if category == 'success' else 'error' }}",
+                        title: "{{ message }}",
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    });
+    </script>
+
+</body>
+
+</html>

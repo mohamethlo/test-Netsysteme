@@ -1,0 +1,59 @@
+<div class="modal fade" id="addClientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouveau client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.add_client') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nom" class="form-label">Nom *</label>
+                            <input type="text" class="form-control" id="nom" name="nom" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="prenom" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="prenom" name="prenom">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="entreprise" class="form-label">Entreprise</label>
+                            <input type="text" class="form-control" id="entreprise" name="entreprise">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="type_client" class="form-label">Type</label>
+                            <select class="form-select" id="type_client" name="type_client">
+                                <option value="prospect">Prospect</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="telephone" name="telephone">
+                        </div>
+                        <div class="col-12">
+                            <label for="adresse" class="form-label">Adresse</label>
+                            <textarea class="form-control" id="adresse" name="adresse" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="ville" class="form-label">Ville</label>
+                            <input type="text" class="form-control" id="ville" name="ville">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="code_postal" class="form-label">Code postal</label>
+                            <input type="text" class="form-control" id="code_postal" name="code_postal">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Liste des Devis{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice text-primary"></i> Liste des Devis</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#devisModal">
+            <i class="fas fa-plus"></i> Nouveau devis
+        </button>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover table-bordered align-middle" id="devisTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Téléphone</th>
+                        <th>Commentaire</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Technicien</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for devis in devis_list %}
+                    <tr>
+                        <td>{{ devis.id }}</td>
+                        <td>{{ devis.nom }}</td>
+                        <td>{{ devis.prenom }}</td>
+                        <td>{{ devis.telephone }}</td>
+                        <td>{{ devis.commentaire }}</td>
+                        <td>{{ devis.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if devis.status == 'pending' %}bg-secondary
+                                {% elif devis.status == 'assigned' %}bg-warning text-dark
+                                {% else %}bg-success{% endif %}">
+                                {{ devis.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if devis.technician %}
+                                {{ devis.technician.prenom }} {{ devis.technician.nom }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if current_user.role.name in ['Administrateur', 'administration'] and devis.status == 'pending' %}
+                            <button class="btn btn-sm btn-outline-primary assign-btn" 
+                                    data-devis-id="{{ devis.id }}"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#assignModal">
+                                Assigner
+                            </button>
+                            {% elif current_user.id == devis.assigned_to and devis.status == 'assigned' %}
+                            <button class="btn btn-sm btn-success complete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#completeModal"
+                                    data-devis-id="{{ devis.id }}"
+                                    data-current-comment="{{ devis.commentaire or '' }}">
+                                Compléter
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal création devis -->
+<div class="modal fade" id="devisModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('main.devis_create') }}" class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-file-invoice"></i> Nouveau devis</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="nom" class="form-label">Nom</label>
+          <input type="text" class="form-control" name="nom" id="nom" required>
+        </div>
+        <div class="mb-3">
+          <label for="prenom" class="form-label">Prénom</label>
+          <input type="text" class="form-control" name="prenom" id="prenom" required>
+        </div>
+        <div class="mb-3">
+          <label for="telephone" class="form-label">Téléphone</label>
+          <input type="text" class="form-control" name="telephone" id="telephone" required>
+        </div>
+        <div class="mb-3">
+          <label for="commentaire" class="form-label">Commentaire</label>
+          <textarea class="form-control" name="commentaire" id="commentaire" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Créer le devis</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal d'assignation -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Assigner un technicien</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="assignForm">
+          <input type="hidden" id="devisIdInput">
+          <div class="mb-3">
+            <label for="technicianSelect" class="form-label">Technicien</label>
+            <select class="form-select" id="technicianSelect" required>
+              <option value="">Sélectionner un technicien</option>
+              {% for tech in technicians %}
+              <option value="{{ tech.id }}">{{ tech.prenom }} {{ tech.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" id="confirmAssign">Assigner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal unique pour compléter le devis -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" id="completeDevisForm" class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Compléter le devis <span id="devisIdTitle"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="devis_id" id="devisIdInputComplete">
+        <div class="mb-3">
+          <label for="completeCommentaire" class="form-label">Commentaire</label>
+          <textarea class="form-control" name="commentaire" id="completeCommentaire" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('#devisTable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+        },
+        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+        columnDefs: [
+            { orderable: false, targets: [8] } // Désactiver le tri sur la colonne Actions
+        ]
+    });
+
+    // Gestion de l'assignation
+    $('.assign-btn').click(function() {
+        const devisId = $(this).data('devis-id');
+        $('#devisIdInput').val(devisId);
+    });
+
+    $('#confirmAssign').click(function() {
+        const devisId = $('#devisIdInput').val();
+        const technicianId = $('#technicianSelect').val();
+        
+        if (!technicianId) {
+            alert('Veuillez sélectionner un technicien');
+            return;
+        }
+
+        $.ajax({
+            url: '/devis/assign/' + devisId,
+            method: 'POST',
+            data: { technician_id: technicianId },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function() {
+                alert('Une erreur est survenue');
+            }
+        });
+    });
+
+    // Gestion de la complétion des devis
+    $('.complete-btn').click(function() {
+        const devisId = $(this).data('devis-id');
+        const currentComment = $(this).data('current-comment');
+        
+        $('#devisIdTitle').text('#' + devisId);
+        $('#devisIdInputComplete').val(devisId);
+        $('#completeCommentaire').val(currentComment);
+        $('#completeDevisForm').attr('action', '/devis/complete/' + devisId);
+    });
+});
+</script>
+{% endblock %}

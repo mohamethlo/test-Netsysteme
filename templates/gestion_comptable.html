@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar vh-100 position-fixed" style="background-color: #0b173d;">
+            <div class="sidebar-sticky pt-3">
+                <div class="px-3 py-3 mb-4 text-white fw-bold fs-5 d-flex align-items-center">
+                    <i data-feather="credit-card" class="me-2"></i> Gestion Comptable
+                </div>
+
+                <ul class="nav flex-column mt-2">
+                    <li class="nav-item">
+                        <a class="nav-link active text-white" id="tab-dakar-btn" href="#" onclick="showTab('dakar')">
+                            <i data-feather="map-pin" class="text-white"></i> Dépenses Dakar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" id="tab-mbour-btn" href="#" onclick="showTab('mbour')">
+                            <i data-feather="map-pin" class="text-white"></i> Dépenses Mbour
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" id="tab-trash-btn" href="#" onclick="showTab('trash')">
+                            <i data-feather="trash-2" class="text-white"></i> Corbeille
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 offset-md-2 vh-100 d-flex flex-column">
+            <div id="dakar" class="tab-content flex-grow-1">
+                <iframe src="{{ url_for('main.expenses_by_site', site='Dakar') }}" frameborder="0" style="width:100%; height:100%;"></iframe>
+            </div>
+            <div id="mbour" class="tab-content d-none flex-grow-1">
+                <iframe src="{{ url_for('main.expenses_by_site', site='Mbour') }}" frameborder="0" style="width:100%; height:100%;"></iframe>
+            </div>
+            <div id="trash" class="tab-content d-none flex-grow-1">
+                <iframe src="{{ url_for('main.expenses_trash') }}" frameborder="0" style="width:100%; height:100%;"></iframe>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('d-none'));
+    document.getElementById(tabId).classList.remove('d-none');
+
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    document.getElementById('tab-' + tabId + '-btn').classList.add('active');
+}
+</script>
+
+<style>
+.nav-link.active {
+    background-color: #06204d;
+    font-weight: bold;
+    border-radius: 0.25rem;
+}
+.nav-link:hover {
+    background-color: #06204d;
+    border-radius: 0.25rem;
+    color: #fff !important;
+}
+</style>
+{% endblock %}

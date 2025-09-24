@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <h2 class="mb-0">
+            <i data-feather="settings" class="text-primary me-2"></i>
+            Gestion des installations
+        </h2>
+        <a href="{{ url_for('main.add_installation') }}" class="btn btn-primary d-flex align-items-center gap-2">
+            <i data-feather="plus"></i> Nouvelle installation
+        </a>
+    </div>
+
+    {% if installations %}
+    <!-- Filtre par dates -->
+    <form id="filtreDates" class="row g-3 align-items-end mb-4">
+        <div class="col-auto">
+            <label for="date_debut" class="form-label mb-0">Date du</label>
+            <input type="date" class="form-control shadow-sm" id="date_debut" name="date_debut">
+        </div>
+        <div class="col-auto">
+            <label for="date_fin" class="form-label mb-0">Au</label>
+            <input type="date" class="form-control shadow-sm" id="date_fin" name="date_fin">
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <!-- <button type="button" class="btn btn-outline-primary" id="btnFiltrer">
+                <i data-feather="filter"></i> Filtrer
+            </button> -->
+            <button type="button" class="btn btn-outline-secondary" id="btnReset">
+                <i data-feather="rotate-ccw"></i> Réinitialiser
+            </button>
+        </div>
+    </form>
+
+    <!-- Affichage des totaux -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 text-center h-100">
+                <div class="card-body py-4">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle mb-2 p-3">
+                            <i data-feather="layers" class="text-primary" style="width:32px;height:32px;"></i>
+                        </div>
+                        <h6 class="text-muted mb-1">Total Installations</h6>
+                        <h3 class="fw-bold text-primary mb-0" id="totalInstallations">{{ "{:,.0f}".format(somme_total) }} F</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 text-center h-100">
+                <div class="card-body py-4">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-danger bg-opacity-10 rounded-circle mb-2 p-3">
+                            <i data-feather="alert-circle" class="text-danger" style="width:32px;height:32px;"></i>
+                        </div>
+                        <h6 class="text-muted mb-1">Total Reliquats</h6>
+                        <h3 class="fw-bold text-danger mb-0" id="totalReliquats">{{ "{:,.0f}".format(somme_restant) }} F</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive mb-4">
+        <table class="table table-hover table-bordered align-middle shadow-sm rounded" id="installationsTable">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Montant total</th>
+                    <th>Avance</th>
+                    <th>Restant</th>
+                    <th>Méthode</th>
+                    <th>Statut</th>
+                    <th>Contrat</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inst in installations %}
+                <tr 
+                    data-date="{{ inst.date_installation.strftime('%Y-%m-%d') if inst.date_installation }}"
+                    data-montant-total="{{ inst.montant_total }}"
+                    data-montant-restant="{{ inst.montant_restant }}"
+                >
+                    <td>{{ loop.index }}</td>
+                    <td>{{ inst.nom }}</td>
+                    <td>{{ inst.prenom }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(inst.montant_total) }} F</td>
+                    <td class="text-end">{{ "{:,.0f}".format(inst.montant_avance) }} F</td>
+                    <td class="text-end">{{ "{:,.0f}".format(inst.montant_restant) }} F</td>
+                    <td>{{ inst.methode_paiement }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if inst.montant_restant == 0 else 'warning' }}">
+                            {{ 'Payé' if inst.montant_restant == 0 else 'Partiel' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if inst.contrat_path %}
+                        <a href="{{ url_for('static', filename=inst.contrat_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i data-feather="file-text"></i> Voir
+                        </a>
+                        {% else %}
+                        <span class="text-muted">Aucun</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        <div class="d-flex gap-2">
+                            <!-- Bouton Versement -->
+                            <button class="btn btn-sm btn-success d-flex align-items-center"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#versementModal"
+                                    data-installation-id="{{ inst.id }}"
+                                    data-montant-total="{{ inst.montant_total }}"
+                                    data-montant-avance="{{ inst.montant_avance }}"
+                                    data-montant-restant="{{ inst.montant_restant }}"
+                                    title="Effectuer un versement">
+                                <i data-feather="dollar-sign" class="feather-sm"></i>
+                            </button>
+                            
+                            <!-- Bouton Modifier -->
+                            <a href="{{ url_for('main.edit_installation', installation_id=inst.id) }}" 
+                            class="btn btn-sm btn-warning text-white d-flex align-items-center"
+                            title="Modifier">
+                                <i data-feather="edit" class="feather-sm"></i>
+                            </a>
+                            
+                            <!-- Bouton Supprimer -->
+                            <form action="{{ url_for('main.delete_installation', installation_id=inst.id) }}" method="POST" class="d-inline">
+                                <button type="submit" 
+                                        class="btn btn-sm btn-danger d-flex align-items-center"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette installation ?');"
+                                        title="Supprimer">
+                                    <i data-feather="trash-2" class="feather-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center my-5 py-5">
+        <i data-feather="info" class="me-2"></i>
+        Aucune installation enregistrée pour le moment
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de versement stylisée -->
+<div class="modal fade" id="versementModal" tabindex="-1" aria-labelledby="versementModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-primary bg-opacity-10">
+                <h5 class="modal-title" id="versementModalLabel">
+                    <i data-feather="dollar-sign" class="text-primary me-2"></i>
+                    Nouveau versement
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.versement_installation', id=0) }}" id="versementForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Montant total (FCFA)</label>
+                        <input type="number" class="form-control" id="modalMontantTotal" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant déjà payé (FCFA)</label>
+                        <input type="number" class="form-control" id="modalMontantAvance" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant restant (FCFA)</label>
+                        <input type="number" class="form-control" id="modalMontantRestant" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant à verser (FCFA) *</label>
+                        <input type="number" class="form-control" name="montant_verse" id="montantVerse" required min="0" step="100">
+                        <div class="invalid-feedback" id="montantError">
+                            Le montant doit être compris entre 1 et le montant restant
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date du versement *</label>
+                        <input type="date" class="form-control" name="date_versement" value="{{ today }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Valider le versement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        {% if installations %}
+        $('#installationsTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            order: [[0, 'asc']]
+        });
+        {% endif %}
+
+        // Filtrage dynamique des totaux et du tableau
+        function filtrerTotaux() {
+            let dateDebut = $('#date_debut').val();
+            let dateFin = $('#date_fin').val();
+
+            let sommeTotal = 0;
+            let sommeRestant = 0;
+
+            $('#installationsTable tbody tr').each(function() {
+                let dateInstall = $(this).data('date');
+                let montantTotal = parseFloat($(this).data('montant-total')) || 0;
+                let montantRestant = parseFloat($(this).data('montant-restant')) || 0;
+
+                // Affiche la ligne si elle est dans la plage, sinon cache-la
+                let show = true;
+                if (dateDebut && dateInstall < dateDebut) show = false;
+                if (dateFin && dateInstall > dateFin) show = false;
+
+                $(this).toggle(show);
+
+                if (show) {
+                    sommeTotal += montantTotal;
+                    sommeRestant += montantRestant;
+                }
+            });
+
+            $('#totalInstallations').text(sommeTotal.toLocaleString('fr-FR') + ' F');
+            $('#totalReliquats').text(sommeRestant.toLocaleString('fr-FR') + ' F');
+        }
+
+        $('#btnFiltrer').on('click', filtrerTotaux);
+
+        $('#btnReset').on('click', function() {
+            $('#date_debut').val('');
+            $('#date_fin').val('');
+            $('#installationsTable tbody tr').show();
+            filtrerTotaux();
+        });
+
+        $('#date_debut, #date_fin').on('change', filtrerTotaux);
+
+        // Gestion de la modale de versement
+        $('#versementModal').on('show.bs.modal', function(event) {
+            var button = $(event.relatedTarget);
+            var modal = $(this);
+
+            // Récupération des données
+            var installationId = button.data('installation-id');
+            var montantTotal = button.data('montant-total');
+            var montantAvance = button.data('montant-avance');
+            var montantRestant = button.data('montant-restant');
+
+            // Mise à jour des champs
+            modal.find('#modalMontantTotal').val(montantTotal);
+            modal.find('#modalMontantAvance').val(montantAvance);
+            modal.find('#modalMontantRestant').val(montantRestant);
+
+            // Mise à jour de l'action du formulaire
+            var formAction = "{{ url_for('main.versement_installation', id=0) }}".replace('/0', '/' + installationId);
+            modal.find('#versementForm').attr('action', formAction);
+
+            // Définition de l'attribut max dynamiquement
+            $('#montantVerse').attr('max', montantRestant);
+
+            // Mise à jour du message d'erreur
+            $('#montantError').text('Le montant doit être compris entre 1 et ' + montantRestant + ' FCFA');
+
+            // Réinitialisation des erreurs
+            $('#montantVerse').removeClass('is-invalid');
+            $('#submitBtn').prop('disabled', false);
+        });
+
+        // Validation du montant
+        $('#montantVerse').on('input', function() {
+            var montantVerse = parseFloat($(this).val()) || 0;
+            var montantRestant = parseFloat($('#modalMontantRestant').val()) || 0;
+
+            if (montantVerse < 1 || montantVerse > montantRestant) {
+                $(this).addClass('is-invalid');
+                $('#submitBtn').prop('disabled', true);
+            } else {
+                $(this).removeClass('is-invalid');
+                $('#submitBtn').prop('disabled', false);
+            }
+        });
+
+        // Initialisation des icônes Feather
+        if (feather) {
+            feather.replace();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+<div class="modal fade" id="importClientsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Importer des clients</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.import_clients') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Fichier Excel (.xlsx, .xls)</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls" required>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i data-feather="info"></i> Format requis</h6>
+                        <p class="mb-2">Le fichier Excel doit contenir les colonnes suivantes :</p>
+                        <ul class="mb-0">
+                            <li><strong>nom</strong> (obligatoire)</li>
+                            <li>prenom</li>
+                            <li>entreprise</li>
+                            <li>email</li>
+                            <li>telephone</li>
+                            <li>adresse</li>
+                            <li>ville</li>
+                            <li>code_postal</li>
+                            <li>type_client (prospect/client)</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i data-feather="download"></i>
+                            Télécharger modèle
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Importer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

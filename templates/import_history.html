@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Historique des imports clients</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Fichier</th>
+            <th>Date</th>
+            <th>Importé par</th>
+            <th>Nb clients</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for imp in history %}
+        <tr>
+            <td>{{ imp.filename }}</td>
+            <td>{{ imp.imported_at.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ imp.imported_by.prenom }} {{ imp.imported_by.nom }}</td>
+            <td>{{ imp.clients|length }}</td>
+            <td>
+                <form action="{{ url_for('main.delete_import', import_id=imp.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cet import et tous les clients associés ?')">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,760 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion clientèle - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="users"></i>
+                    Gestion clientèle
+                </h2>
+                {% if current_user.role.name == 'Administrateur' %}
+                <div class="btn-group">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClientModal">
+                        <i data-feather="plus"></i>
+                        Nouveau client
+                    </button>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importClientsModal">
+                        <i data-feather="upload"></i>
+                        Importer Excel
+                    </button>
+                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#calendarModal">
+                        <i data-feather="calendar"></i>
+                        Calendrier
+                    </button>
+                    <a href="{{ url_for('main.import_history') }}" class="btn btn-outline-info">
+                        <i data-feather="clock"></i>
+                        Historique imports
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Calendrier Modal -->
+    <div class="modal fade" id="calendarModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Calendrier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clients Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="users" class="text-primary me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">T.Prospects initial</h6>
+                            <h4 class="mb-0">{{ clients|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="check-circle" class="text-success me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Clients</h6>
+                            <h4 class="mb-0">{{ clients|selectattr('type_client', 'equalto', 'client')|list|length }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="user-plus" class="text-info me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Prospects</h6>
+                            <h4 class="mb-0">{{ clients|selectattr('type_client', 'equalto', 'prospect')|list|length }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="calendar" class="text-warning me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Ce mois</h6>
+                            <h4 class="mb-0">
+                                {{ clients|selectattr('type_client', 'equalto', 'client')|selectattr('created_at', '>=',
+                                start_of_month)|list|length }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if current_user.role.name == 'Administrateur' %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <strong>Classement des commerciaux par implication (notes d'observation)</strong>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        {% for user, nb_notes in top_commerciaux %}
+                        <li>
+                            {{ user.prenom }} {{ user.nom }} — <strong>{{ nb_notes }}</strong> notes
+                        </li>
+                        {% else %}
+                        <li>Aucune note enregistrée</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter and Search -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i data-feather="search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Rechercher un client...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="typeFilter">
+                <option value="">Tous les types</option>
+                <option value="client">Clients</option>
+                <option value="prospect">Prospects</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="sortBy">
+                <option value="nom">Trier par nom</option>
+                <option value="created_at">Date de création</option>
+                <option value="entreprise">Entreprise</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Clients List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Liste des clients</h5>
+                </div>
+                <div class="card-body">
+                    {% if clients %}
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="clientsTable">
+                            <thead>
+                                <tr>
+                                    <th>Nom complet</th>
+                                    <th>Entreprise</th>
+                                    <th>Contact</th>
+                                    <th>Adresse</th>
+                                    <th>Type</th>
+                                    <th>Observation</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for client in clients %}
+                                <tr data-type="{{ client.type_client }}"
+                                    data-name="{{ client.nom|lower }} {{ client.prenom|lower if client.prenom }}"
+                                    data-company="{{ client.entreprise|lower if client.entreprise }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2">
+                                                {{ client.nom[0]|upper }}{% if client.prenom %}{{ client.prenom[0]|upper
+                                                }}{% endif %}
+                                            </div>
+                                            <div>
+                                                <strong>{{ client.nom }}</strong>
+                                                {% if client.prenom %}{{ client.prenom }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if client.entreprise %}
+                                        {{ client.entreprise }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.email %}
+                                        <div><i data-feather="mail" class="me-1"
+                                                style="width: 14px; height: 14px;"></i>{{ client.email }}</div>
+                                        {% endif %}
+                                        {% if client.telephone %}
+                                        <div><i data-feather="phone" class="me-1"
+                                                style="width: 14px; height: 14px;"></i>{{ client.telephone }}</div>
+                                        {% endif %}
+                                        {% if not client.email and not client.telephone %}
+                                        <span class="text-muted">Non renseigné</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.adresse %}
+                                        {{ client.adresse[:30] }}{% if client.adresse|length > 30 %}...{% endif %}
+                                        {% if client.ville %}
+                                        <br><small class="text-muted">{{ client.ville }}{% if client.code_postal %} ({{
+                                            client.code_postal }}){% endif %}</small>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">Non renseignée</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.type_client == 'client' %}
+                                        <span class="badge bg-success">Client</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Prospect</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="reminder-container">
+                                            {% if client.next_reminder %}
+                                            <div>
+                                                <span
+                                                    class="{% if client.next_reminder.remind_at and client.next_reminder.remind_at >= now %}text-warning{% else %}text-muted{% endif %}">
+                                                    <i data-feather="clock" style="width: 14px; height: 14px;"></i>
+                                                    {% if client.next_reminder.remind_at %}
+                                                    Rappel : {{ client.next_reminder.remind_at.strftime('%d/%m/%Y
+                                                    %H:%M') }}
+                                                    {% endif %}
+                                                    <br>
+                                                    <small>
+                                                        <i data-feather="calendar"
+                                                            style="width: 12px; height: 12px;"></i>
+                                                        {{ client.next_reminder.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                                    </small>
+                                                    {% if client.next_reminder.notes %}
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i data-feather="file-text"
+                                                            style="width: 12px; height: 12px;"></i>
+                                                        {{ client.next_reminder.notes|truncate(50) }}
+                                                        {% if client.next_reminder.notes|length > 50 %}
+                                                        <a href="#" class="ms-1"
+                                                            onclick="showFullNote(`{{ client.next_reminder.notes|escape|replace('\n', '<br>') }}`); return false;">Voir</a>
+                                                        {% endif %}
+                                                    </small>
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted">Aucune observation</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+
+                                            <button class="btn btn-outline-secondary" title="Modifier"
+                                                onclick="editClient({{ client.id }})">
+                                                <i data-feather="edit"></i>
+                                            </button>
+                                            <a href="{{ url_for('main.client_suivi', client_id=client.id, page=request.args.get('page', 1)) }}"
+                                                class="btn btn-outline-warning btn-sm" title="Suivi client">
+                                                <i data-feather="activity"></i>
+                                            </a>
+
+
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- Pagination -->
+                        <!-- {% if pagination.pages > 1 %}
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                {% if pagination.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="{{ url_for('main.clients', page=pagination.prev_num) }}">&laquo;</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                {% endif %}
+                                {% for p in range(1, pagination.pages + 1) %}
+                                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('main.clients', page=p) }}">{{ p }}</a>
+                                </li>
+                                {% endfor %}
+                                {% if pagination.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="{{ url_for('main.clients', page=pagination.next_num) }}">&raquo;</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %} -->
+                    </div>
+
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="users" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucun client enregistré</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal fade" id="addClientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouveau client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.add_client') }}" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nom" class="form-label">Nom *</label>
+                            <input type="text" class="form-control" id="nom" name="nom" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="prenom" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="prenom" name="prenom">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="entreprise" class="form-label">Entreprise</label>
+                            <input type="text" class="form-control" id="entreprise" name="entreprise">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="type_client" class="form-label">Type</label>
+                            <select class="form-select" id="type_client" name="type_client">
+                                <option value="prospect">Prospect</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="telephone" name="telephone">
+                        </div>
+                        <div class="col-12">
+                            <label for="adresse" class="form-label">Adresse</label>
+                            <textarea class="form-control" id="adresse" name="adresse" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="ville" class="form-label">Ville</label>
+                            <input type="text" class="form-control" id="ville" name="ville">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="code_postal" class="form-label">Code postal</label>
+                            <input type="text" class="form-control" id="code_postal" name="code_postal">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Clients Modal -->
+<div class="modal fade" id="importClientsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Importer des clients</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.import_clients') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Fichier Excel (.xlsx, .xls)</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls" required>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i data-feather="info"></i> Format requis</h6>
+                        <p class="mb-2">Le fichier Excel doit contenir les colonnes suivantes :</p>
+                        <ul class="mb-0">
+                            <li><strong>nom</strong> (obligatoire)</li>
+                            <li>prenom</li>
+                            <li>entreprise</li>
+                            <li>email</li>
+                            <li>telephone</li>
+                            <li>adresse</li>
+                            <li>ville</li>
+                            <li>code_postal</li>
+                            <li>type_client (prospect/client)</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i data-feather="download"></i>
+                            Télécharger modèle
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Importer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Client Details Modal -->
+<div class="modal fade" id="clientDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails du client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="clientDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Suivi Client Modal -->
+<div class="modal fade" id="clientTrackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Suivi client</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="clientTrackContent">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal pour afficher la note complète -->
+<div class="modal fade" id="fullNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Observation complète</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="fullNoteContent"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showFullNote(note) {
+        document.getElementById('fullNoteContent').innerHTML = note;
+        var modal = new bootstrap.Modal(document.getElementById('fullNoteModal'));
+        modal.show();
+    }
+</script>
+<script>
+    // Filter and search functionality
+    document.getElementById('searchInput').addEventListener('input', filterClients);
+    document.getElementById('typeFilter').addEventListener('change', filterClients);
+
+    function filterClients() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const typeFilter = document.getElementById('typeFilter').value;
+        const rows = document.querySelectorAll('#clientsTable tbody tr');
+
+        rows.forEach(row => {
+            const name = row.dataset.name || '';
+            const company = row.dataset.company || '';
+            const type = row.dataset.type;
+
+            const matchesSearch = name.includes(searchTerm) || company.includes(searchTerm);
+            const matchesType = !typeFilter || type === typeFilter;
+
+            row.style.display = matchesSearch && matchesType ? '' : 'none';
+        });
+    }
+
+    // Sort functionality
+    document.getElementById('sortBy').addEventListener('change', function () {
+        const sortBy = this.value;
+        const tbody = document.querySelector('#clientsTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            let aVal, bVal;
+
+            switch (sortBy) {
+                case 'nom':
+                    aVal = a.dataset.name;
+                    bVal = b.dataset.name;
+                    break;
+                case 'entreprise':
+                    aVal = a.dataset.company || '';
+                    bVal = b.dataset.company || '';
+                    break;
+                default:
+                    return 0;
+            }
+
+            return aVal.localeCompare(bVal);
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    });
+
+    // Client actions
+    function viewClient(clientId) {
+        fetch(`/client/${clientId}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('clientDetailsContent').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('clientDetailsModal'));
+                modal.show();
+            });
+    }
+
+    function editClient(clientId) {
+        window.location.href = `/edit_client/${clientId}`;
+    }
+
+    /* function convertToClient(clientId) {
+        if (confirm('Convertir ce prospect en client ?')) {
+            fetch(`/convert_client/${clientId}`, {method: 'POST'})
+                .then(() => window.location.reload());
+        }
+    } */
+    function trackClient(clientId) {
+        fetch(`/client_track/${clientId}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('clientTrackContent').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('clientTrackModal'));
+                modal.show();
+            });
+    }
+</script>
+<script>
+    window.remindLater = function (clientId) {
+        document.getElementById('trackActionsResult').innerHTML = `
+        <form id="remindForm" class="mb-2">
+            <label for="remindDate" class="form-label">Date et heure du rappel :</label>
+            <input type="datetime-local" class="form-control mb-2" id="remindDate" name="remindDate" required>
+            <button type="submit" class="btn btn-warning btn-sm">Programmer le rappel</button>
+        </form>
+    `;
+        document.getElementById('remindForm').onsubmit = function (e) {
+            e.preventDefault();
+            const remindDate = document.getElementById('remindDate').value;
+            fetch(`/client_remind/${clientId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remind_date: remindDate })
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-success">Rappel programmé pour le ' + new Date(remindDate).toLocaleString() + '.</div>';
+                    } else {
+                        document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-danger">Erreur lors de la programmation du rappel.</div>';
+                    }
+                });
+        }
+    }
+
+    window.sendCatalogue = function (clientId) {
+        fetch(`/client_send_catalogue/${clientId}`, { method: 'POST' })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-info">Catalogue envoyé au client !</div>';
+                } else {
+                    document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-danger">Erreur lors de l\'envoi du catalogue.</div>';
+                }
+            });
+    }
+
+    window.requestQuote = function (clientId) {
+        document.getElementById('trackActionsResult').innerHTML = `
+        <form id="quoteForm" class="mb-2">
+            <label for="quoteDetails" class="form-label">Détails de la demande :</label>
+            <textarea class="form-control mb-2" id="quoteDetails" name="quoteDetails" required></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">Envoyer la demande</button>
+        </form>
+    `;
+        document.getElementById('quoteForm').onsubmit = function (e) {
+            e.preventDefault();
+            const details = document.getElementById('quoteDetails').value;
+            fetch(`/client_request_quote/${clientId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ details: details })
+            })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-primary">Demande de devis envoyée !</div>';
+                    } else {
+                        document.getElementById('trackActionsResult').innerHTML = '<div class="alert alert-danger">Erreur lors de l\'envoi de la demande.</div>';
+                    }
+                });
+        }
+    }
+    $(document).ready(function () {
+        const table = $('#clientsTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+            buttons: [
+                {
+                    extend: 'copy',
+                    text: '<i data-feather="copy"></i> Copier',
+                    className: 'btn btn-sm btn-primary me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'excel',
+                    text: '<i data-feather="file-text"></i> Excel',
+                    className: 'btn btn-sm btn-success me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'csv',
+                    text: '<i data-feather="file"></i> CSV',
+                    className: 'btn btn-sm btn-info me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i data-feather="file-text"></i> PDF',
+                    className: 'btn btn-sm btn-danger me-1',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i data-feather="printer"></i> Imprimer',
+                    className: 'btn btn-sm btn-secondary',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }
+            ],
+            pageLength: 10,
+            order: [[0, 'asc']],
+            columnDefs: [
+                {
+                    targets: -1,
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+            drawCallback: function () {
+                feather.replace();
+            }
+        });
+        
+        // Aller à la page indiquée dans l'URL (si présente) APRÈS l'initialisation complète
+        table.on('init', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pageParam = urlParams.get('page');
+            if (pageParam && !isNaN(pageParam)) {
+                table.page(Number(pageParam) - 1).draw('page');
+            }
+        });
+        $('#clientsTable').on('click', '.btn-outline-warning', function (e) {
+            const page = table.page.info().page + 1;
+            let href = $(this).attr('href');
+            // Supprime tout paramètre page existant
+            href = href.replace(/(\?|&)page=\d+/, '');
+            // Ajoute le paramètre page correctement
+            if (href.indexOf('?') > -1) {
+                href += '&page=' + page;
+            } else {
+                href += '?page=' + page;
+            }
+            $(this).attr('href', href);
+        });
+        // Intégration des filtres personnalisés
+        $('#searchInput').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+        $('#typeFilter').on('change', function () {
+            table.column(4).search(this.value).draw();
+        });
+
+        $('#sortBy').on('change', function () {
+            const column = this.value === 'nom' ? 0 :
+                this.value === 'entreprise' ? 1 : 0;
+            table.order([column, 'asc']).draw();
+        });
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: '/api/calendar/events'
+        });
+        $('#calendarModal').on('shown.bs.modal', function () {
+            calendar.render();
+        });
+    }
+});
+</script>
+{% endblock %}

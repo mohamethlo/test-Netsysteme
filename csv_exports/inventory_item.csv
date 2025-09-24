@@ -1,0 +1,2 @@
+id,name,description,reference,category_id,quantity,unit,prix_achat,prix_vente,seuil_alerte,fournisseur,emplacement,created_at,updated_at
+1,Caméra,Caméra surveillance,P001,1,15,pièce,25000.0,35000.0,10,NETSYS,DEPOT,2025-06-10 15:37:10,2025-06-30 11:00:04

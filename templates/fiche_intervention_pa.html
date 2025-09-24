@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Fiche d'intervention</title>
+    <style>
+        /* Style minimaliste */
+        body { font-family: Arial; font-size: 12pt; margin: 0; padding: 10mm; }
+        table { width: 100%; border-collapse: collapse; margin: 5mm 0; }
+        th, td { border: 1px solid #000; padding: 3mm; }
+        th { background: #eee; }
+        .header { text-align: center; margin-bottom: 10mm; }
+        .footer { margin-top: 10mm; font-size: 10pt; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>FICHE D'INTERVENTION</h2>
+        <h3>NETSYSTEME INFORMATIQUE & TELECOM</h3>
+    </div>
+
+    <div>
+        <strong>Intervention N°:</strong> 000{{ intervention.id }}<br>
+        <strong>Date:</strong> {{ intervention.date_prevue.strftime('%d/%m/%Y') if intervention.date_prevue else 'N/A' }}
+    </div>
+
+    <table>
+        <tr>
+            <th colspan="2">Informations Client</th>
+        </tr>
+        <tr>
+            <td><strong>Nom:</strong></td>
+            <td>
+                {% if intervention.client %}
+                    {{ intervention.client.nom }} {{ intervention.client.prenom }}
+                    {% if intervention.client.entreprise %}
+                        ({{ intervention.client.entreprise }})
+                    {% endif %}
+                {% else %}
+                    {{ intervention.client_libre_nom }}
+                    {% if intervention.societe %}
+                        ({{ intervention.societe }})
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Ajoutez le reste des informations nécessaires -->
+
+    <div class="footer">
+        <p>Whatsapp: 77 846 16 55 | Bureau: 33 883 42 42 - 33 827 28 45</p>
+        <p>Ouest foire, route aéroport, immeuble Seigneurie</p>
+    </div>
+</body>
+</html>

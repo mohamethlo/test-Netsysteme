@@ -1,0 +1,41 @@
+<div>
+    <h5>
+        {{ user.prenom }} {{ user.nom }}
+        <br>
+        <small class="text-muted">@{{ user.username }}</small>
+    </h5>
+    {% if user.email %}
+        <p><strong>Email :</strong> {{ user.email }}</p>
+    {% endif %}
+    {% if user.telephone %}
+        <p><strong>Téléphone :</strong> {{ user.telephone }}</p>
+    {% endif %}
+    {% if user.role %}
+        <p><strong>Rôle :</strong> {{ user.role.name }}</p>
+    {% endif %}
+    {% if user.permissions and user.permissions != 'all' %}
+        <p>
+            <strong>Permissions :</strong>
+            {% for perm in user.permissions.split(',') %}
+                <span class="badge bg-secondary">{{ perm }}</span>
+            {% endfor %}
+        </p>
+    {% elif user.permissions == 'all' %}
+        <p><strong>Permissions :</strong> <span class="badge bg-info">Toutes</span></p>
+    {% endif %}
+    {% if user.is_active is not none %}
+        <p><strong>Statut :</strong>
+            {% if user.is_active %}
+                <span class="badge bg-success">Actif</span>
+            {% else %}
+                <span class="badge bg-danger">Inactif</span>
+            {% endif %}
+        </p>
+    {% endif %}
+    {% if user.last_login %}
+        <p><strong>Dernière connexion :</strong> {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}</p>
+    {% endif %}
+    {% if user.created_at %}
+        <p><strong>Date création :</strong> {{ user.created_at.strftime('%d/%m/%Y') }}</p>
+    {% endif %}
+</div>

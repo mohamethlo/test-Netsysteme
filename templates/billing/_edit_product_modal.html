@@ -1,0 +1,69 @@
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifier Produit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editProductForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Désignation</label>
+                            <input type="text" class="form-control" name="description" 
+                                   value="{{ product.description }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Quantité</label>
+                            <input type="number" step="1" class="form-control" name="qty" 
+                                   value="{{ product.quantity }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Niveau d'alerte</label>
+                            <input type="number" step="1" class="form-control" name="alert_quantity" 
+                                   value="{{ product.alert_quantity }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Prix Unitaire (Fcfa)</label>
+                            <input type="number" step="1" class="form-control" name="prix" 
+                                   value="{{ product.unit_price }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Fournisseur</label>
+                            <input type="text" class="form-control" name="fournisseur" 
+                                   value="{{ product.supplier or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Image du produit</label>
+                            <input class="form-control" type="file" name="img" accept=".pdf,image/*">
+                            {% if product.image_path %}
+                            <div class="mt-2">
+                                <img src="{{ url_for('static', filename=product.image_path) }}" 
+                                     style="max-height: 100px;" class="img-thumbnail">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="remove_image">
+                                    <label class="form-check-label">Supprimer l'image actuelle</label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i data-feather="x"></i> Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

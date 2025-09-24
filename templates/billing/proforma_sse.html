@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Proforma #{{ proforma.proforma_number }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+            font-size: 18px;
+            color: #000;
+            background-color: white;
+        }
+        .page {
+            page-break-after: always; 
+            position: relative;
+            min-height: 29.7cm;
+            padding-bottom: 150px;
+        }
+        .last-page {
+            page-break-after: auto;
+        }
+        .header-container {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .logo-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-header img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .client-section,
+        .facture-section {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding: 0 10px;
+            margin-top: 40px;
+        }
+        .client-section {
+            text-align: left;
+        }
+        .facture-section {
+            text-align: right;
+        }
+        .client-section .name {
+            font-size: 18px;
+            color: #000;
+            font-weight: bold;
+            margin-top: 0;
+            padding-top: 0;
+        }
+        .facture-header,.client_header {
+            color: #3064d6;
+            font-size: 35px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .separator {
+            border-top: 1px solid #3064d6;
+            border-bottom: 1px solid #3064d6;
+            height: 3px;
+            margin: 5px 0 20px;
+            background-color: #3064d6;
+            position: relative;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px;
+            vertical-align: top;
+            border-left: none;
+            border-right: none;
+        }
+        thead th {
+            background-color: #e0e0e0;
+            color: #000;
+            font-weight: bold;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+        }
+        thead th:first-child {
+            border-top-left-radius: 8px;
+            text-align: left;
+        }
+        thead th:nth-child(2) {
+            text-align: center;
+        }
+        thead th:nth-child(3), 
+        thead th:nth-child(4) {
+            text-align: right;
+        }
+        thead th:last-child {
+            border-top-right-radius: 8px;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #f5f5f5;
+        }
+        tbody td:nth-child(3),
+        tbody td:nth-child(4) {
+            text-align: right;
+        }
+        tbody tr:last-child td {
+            border-bottom: 1px solid #ccc;
+        }
+        tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+        }
+        tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
+        }
+        .total-row {
+            font-weight: bold;
+            text-align: right;
+        }
+        .total-row td:first-child {
+            text-align: left;
+        }
+        .total-ttc {
+            color: #3064d6;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .footer-notes {
+            margin-top: 40px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .proforma-conditions {
+            margin-top: 60px;
+            font-size: 18px;
+            color: #000;
+            border: 2px solid #3064d6;
+            border-radius: 10px;
+            padding: 30px 30px 40px 30px;
+            background: #f8fafc;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .proforma-conditions-title {
+            color: #3064d6;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .proforma-conditions-content {
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .proforma-signature {
+            margin-top: 40px;
+            font-size: 18px;
+        }
+        .proforma-signature label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .proforma-signature .signature-line {
+            display: inline-block;
+            min-width: 250px;
+            border-bottom: 1px dotted #3064d6;
+            margin-left: 10px;
+            margin-right: 30px;
+            height: 1.2em;
+            vertical-align: middle;
+        }
+        .cachet {
+           position: relative;
+            bottom: 180px;
+            left: 50px;
+            width: 250px;
+        }
+        .footer-img {
+            text-align: center;
+            margin-top: 40px;
+            object-fit: contain;
+        }
+        .footer-img img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .content-wrap {
+            margin-bottom: 200px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Page Proforma (1ère page) -->
+<div class="page">
+    <div class="content-wrap">
+        <div class="logo-header">
+            <img src="{{ url_for('static', filename='img/logo_sse.PNG', _external=True) }}" alt="Logo SSE">
+        </div>
+
+        <div class="header-container">
+            <div class="client-section">
+                <div class="client_header">CLIENT</div>
+                <div class="separator"></div>
+                <div class="name">
+                    {{ proforma.billing_client.company_name if proforma.billing_client.company_name else '' }}<br>
+                    {% if proforma.billing_client.company_name and proforma.billing_client.contact_name %}
+                        {{ proforma.billing_client.contact_name }}<br>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="facture-section">
+                <div class="facture-header">PROFORMA</div>
+                <div class="facture-info">
+                    Numéro : #{{ proforma.proforma_number }}<br>
+                    Date : {{ proforma.date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Désignation</th>
+                <th>Qté</th>
+                <th style="text-align: right;">P. Unit</th>
+                <th style="text-align: right;">Total HT</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in proforma.items %}
+            <tr>
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(item.unit_price) }} Fcfa</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(item.unit_price * item.quantity) }} Fcfa</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td></td>
+                <td></td>
+                <td>Total HT</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(proforma.total_amount()) }} Fcfa</td>
+            </tr>
+            <tr class="total-row">
+                <td></td>
+                <td></td>
+                <td>TVA ({{ "{:.0f}".format(proforma.tax_rate * 100) }}%)</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(proforma.tax_amount()) }} Fcfa</td>
+            </tr>
+            <tr class="total-row total-ttc">
+                <td></td>
+                <td></td>
+                <td>Total TTC</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(proforma.total_with_tax()) }} Fcfa</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <img class="cachet" src="{{ url_for('static', filename='img/CachetNetsys.PNG', _external=True) }}" alt="Cachet de l'entreprise">
+    <div class="footer-img">
+        <img src="{{ url_for('static', filename='img/footer_sse.PNG', _external=True) }}" alt="Footer SSE">
+    </div>
+</div>
+
+<!-- Page Conditions Commerciales (2ème et dernière page) -->
+<div class="page last-page">
+    <div class="content-wrap">
+        <div class="proforma-conditions">
+            <div class="proforma-conditions-title">CONDITIONS COMMERCIALES</div>
+            <div class="proforma-conditions-content">
+                BON POUR ACCORD
+            </div>
+            <div class="proforma-signature">
+                <label>Pour un montant total de :</label>
+                <span class="signature-line"></span>
+                <br><br>
+                <label>Date :</label>
+                <span class="signature-line"></span>
+                <br><br>
+                <label>Nom :</label>
+                <span class="signature-line"></span>
+                <br><br>
+                <label>Signature et cachet :</label>
+                <span class="signature-line"></span>
+                <br><br>
+                <label>Mode de réglement :</label>
+                <span class="signature-line"></span>
+            </div>
+        </div>
+    </div>
+    <div class="footer-img">
+        <img src="{{ url_for('static', filename='img/footer_sse.PNG', _external=True) }}" alt="Footer SSE">
+    </div>
+</div>
+
+</body>
+</html>

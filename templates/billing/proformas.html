@@ -1,0 +1,139 @@
+{% extends "billing/base.html" %}
+
+{% block billing_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Gestion des Proformas</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('billing.new_proforma') }}" class="btn btn-primary">
+            <i data-feather="plus"></i> Nouveau proforma
+        </a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="proformasTable" class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Numéro</th>
+                <th>Date</th>
+                <th>Validité</th>
+                <th>Client</th>
+                <th>Domaine</th>
+                <th>Montant TTC</th>
+                <th>Statut</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proforma in proformas %}
+            <tr>
+                <td>{{ proforma.proforma_number }}</td>
+                <td>{{ proforma.date.strftime('%d/%m/%Y') }}</td>
+                <td>{{ proforma.valid_until.strftime('%d/%m/%Y') if proforma.valid_until else '-' }}</td>
+                <td>{{ proforma.billing_client.company_name }}</td>
+                <td>{{ proforma.domaine or '' }}</td>
+                <td>{{ "%.2f"|format(proforma.total_with_tax_and_discount()) }} Fcfa</td>
+                <td>
+                    <span class="badge bg-{% if proforma.status == 'converted' %}success{% elif proforma.status == 'sent' %}primary{% else %}secondary{% endif %}">
+                        {{ proforma.status }}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex justify-content-center gap-1">
+                        <!-- Bouton Dupliquer -->
+                        <a href="{{ url_for('billing.duplicate_proforma', proforma_id=proforma.id) }}" 
+                           class="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center" 
+                           title="Dupliquer"
+                           onclick="return confirm('Voulez-vous vraiment dupliquer cette proforma ?');"
+                           style="width: 32px; height: 32px;">
+                            <i data-feather="copy" class="feather-xs"></i>
+                        </a>
+                        
+                        <!-- Bouton Voir -->
+                        <a href="{{ url_for('billing.view_proforma', proforma_id=proforma.id) }}" 
+                           class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                           title="Voir"
+                           style="width: 32px; height: 32px;">
+                            <i data-feather="eye" class="feather-xs"></i>
+                        </a>
+                        
+                        <!-- Bouton PDF -->
+                        <a target="_blank" href="{{ url_for('billing.proforma_pdf', proforma_id=proforma.id) }}" 
+                           class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center"
+                           title="PDF"
+                           style="width: 32px; height: 32px;">
+                            <i data-feather="file-text" class="feather-xs"></i>PDF
+                        </a>
+                        
+                        {% if not proforma.converted_to_invoice %}
+                        <!-- Bouton Convertir -->
+                        <a href="{{ url_for('billing.convert_proforma', proforma_id=proforma.id) }}" 
+                           class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
+                           title="Convertir en facture"
+                           style="width: 32px; height: 32px;">
+                            <i data-feather="file-plus" class="feather-xs"></i>
+                        </a>
+                        
+                        <!-- Bouton Modifier -->
+                        <a href="{{ url_for('billing.edit_proforma', proforma_id=proforma.id) }}" 
+                           class="btn btn-sm btn-warning text-white d-flex align-items-center justify-content-center"
+                           title="Modifier"
+                           style="width: 32px; height: 32px;">
+                            <i data-feather="edit" class="feather-xs"></i>
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Bouton Supprimer -->
+                        <form action="{{ url_for('billing.delete_proforma', proforma_id=proforma.id) }}" method="POST" class="d-inline">
+                            <button type="submit" 
+                                    class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                                    title="Supprimer"
+                                    onclick="return confirm('Voulez-vous vraiment supprimer cette proforma ?')"
+                                    style="width: 32px; height: 32px;">
+                                <i data-feather="trash-2" class="feather-xs"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- DataTables JS & CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#proformasTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            order: [[1, 'desc']],
+            columnDefs: [
+                { targets: -1, orderable: false } // Désactive le tri sur la colonne Actions
+            ]
+        });
+        if (window.feather) feather.replace();
+    });
+</script>
+
+<style>
+    .feather-xs {
+        width: 12px;
+        height: 12px;
+    }
+    .btn-sm {
+        padding: 0.2rem;
+        border-radius: 0.2rem;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .gap-1 {
+        gap: 0.25rem;
+    }
+</style>
+{% endblock %}

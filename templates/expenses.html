@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block title %}Dépenses - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="credit-card"></i>
+                    Gestion des dépenses
+                </h2>
+                {% if current_user.role.name == 'Administrateur' %}
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addApproModal">
+                    <i data-feather="dollar-sign"></i>
+                    Approvisionnement
+                </button>
+                <a href="{{ url_for('main.appro_history') }}" class="btn btn-outline-info ms-2">
+                    <i data-feather="list"></i>
+                    Historique des approvisionnements
+                </a>
+                {% endif %}
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                    <i data-feather="plus"></i>
+                    Nouvelle dépense
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addApproModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('main.add_approvisionnement') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouvel approvisionnement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="site" class="form-label">Site concerné *</label>
+                    <select class="form-select" id="site" name="site" required>
+                        <option value="">Sélectionner un site</option>
+                        <option value="Dakar">Dakar</option>
+                        <option value="Mbour">Mbour</option>
+                    </select>
+                    <label for="montant" class="form-label mt-3">Montant à approvisionner *</label>
+                    <input type="number" class="form-control" id="montant" name="montant" min="0" step="0.01" required>
+                    <label for="date" class="form-label mt-3">Date d'approvisionnement *</label>
+                    <input type="date" class="form-control" id="date" name="date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Approvisionner</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Expenses Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="credit-card" class="text-primary me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Total dépenses</h6>
+                            <h4 class="mb-0">{{ expenses|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="clock" class="text-warning me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">En attente</h6>
+                            <h4 class="mb-0">{{ expenses|selectattr('statut', 'equalto', 'en_attente')|list|length }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="check-circle" class="text-success me-3" style="width: 32px; height: 32px;"></i>
+                        <div>
+                            <h6 class="mb-0">Approuvées</h6>
+                            <h4 class="mb-0">{{ expenses|selectattr('statut', 'equalto', 'approuve')|list|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4 mt-4" style="margin-left: 0.09rem;">
+    {% if current_user.role.name == 'Administrateur' %}
+        {% for stat in site_stats %}
+        <div class="col-md-6 mb-3">
+            <a href="{{ url_for('main.expenses_by_site', site=stat.site) }}" 
+                class="card shadow border-0 h-100 site-card text-decoration-none"
+                style="cursor:pointer; background: linear-gradient(120deg, #e0e7ef 60%, #f8fafc 100%); color: inherit;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i data-feather="map-pin" class="text-primary me-2"></i>
+                        <span class="badge bg-primary" style="font-size:1.1rem;">{{ stat.site }}</span>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <div class="mb-1 text-muted" style="font-size:0.95rem;">Total dépenses</div>
+                            <div class="fw-bold text-info" style="font-size:1.5rem;">
+                                {{ "%.0f"|format(stat.total_depenses) }} Fcfa
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-1 text-muted" style="font-size:0.95rem;">Montant restant</div>
+                            <div class="fw-bold text-success" style="font-size:1.5rem;">
+                                {{ "%.0f"|format(stat.montant_restant) }} Fcfa
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+        {% elif current_user.role.name == 'administration' %}
+        <div class="col-md-6 offset-md-3 mb-3">
+            <a href="{{ url_for('main.expenses_by_site', site=site) }}" 
+            class="card shadow border-0 h-100 text-decoration-none"
+            style="cursor:pointer; background: linear-gradient(120deg, #e0e7ef 60%, #f8fafc 100%); color: inherit;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i data-feather="map-pin" class="text-primary me-2"></i>
+                        <span class="badge bg-primary" style="font-size:1.1rem;">{{ site }}</span>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <div class="mb-1 text-muted" style="font-size:0.95rem;">Total dépenses</div>
+                            <div class="fw-bold text-info" style="font-size:1.5rem;">
+                                {{ "%.0f"|format(total_depenses) }} Fcfa
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-1 text-muted" style="font-size:0.95rem;">Montant restant</div>
+                            <div class="fw-bold text-success" style="font-size:1.5rem;">
+                                {{ "%.0f"|format(montant_restant) }} Fcfa
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    {% endif %}
+</div>
+    </div>
+
+    <!-- Expenses List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center">
+                    <h5 class="mb-0">Liste des dépenses</h5>
+
+                    <!-- Filtres -->
+                    <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                        {% if current_user.role.name == 'Administrateur' %}
+                        <div>
+                            <label for="siteFilter" class="form-label mb-0 me-1 small">Site :</label>
+                            <select id="siteFilter" class="form-select form-select-sm">
+                                <option value="">Tous</option>
+                                <option value="Dakar">Dakar</option>
+                                <option value="Mbour">Mbour</option>
+                                {# Exemple dynamique :
+                                {% for site in sites %}
+                                    <option value="{{ site }}">{{ site }}</option>
+                                {% endfor %} #}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="employeeFilter" class="form-label mb-0 me-1 small">Employé :</label>
+                            <select id="employeeFilter" class="form-select form-select-sm">
+                                <option value="">Tous</option>
+                                {% for exp in expenses|unique(attribute='user.id') %}
+                                    <option value="{{ exp.user.prenom }} {{ exp.user.nom }}">
+                                        {{ exp.user.prenom }} {{ exp.user.nom }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <label for="categoryFilter" class="form-label mb-0 me-1 small">Catégorie :</label>
+                            <select id="categoryFilter" class="form-select form-select-sm">
+                                <option value="">Toutes</option>
+                                {% for exp in expenses|unique(attribute='categorie') %}
+                                    {% if exp.categorie %}
+                                        <option value="{{ exp.categorie }}">{{ exp.categorie }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <button id="resetFilters" class="btn btn-outline-secondary btn-sm mb-3" style="display:none;">
+                        Réinitialiser les filtres
+                    </button>
+
+                    {% if expenses %}
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle" id="depensesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Titre</th>
+                                    {% if current_user.role.name == 'Administrateur' %}
+                                        <th>Employé</th>
+                                        <th>Site</th>
+                                    {% endif %}
+                                    <th>Catégorie</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses %}
+                                <tr data-site="{{ expense.site }}"
+                                    data-category="{{ expense.categorie or '' }}"
+                                    data-employee="{{ expense.user.prenom }} {{ expense.user.nom }}">
+                                    <td>{{ expense.date_depense.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <strong>{{ expense.titre }}</strong>
+                                        {% if expense.description %}
+                                        <br><small class="text-muted">
+                                            {{ expense.description[:50] }}{% if expense.description|length > 50 %}...{% endif %}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    {% if current_user.role.name == 'Administrateur' %}
+                                        <td>{{ expense.user.prenom }} {{ expense.user.nom }}</td>
+                                        <td>{{ expense.site or "—" }}</td>
+                                    {% endif %}
+                                    <td>
+                                        {% if expense.categorie %}
+                                            <span class="badge bg-secondary">{{ expense.categorie }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Non catégorisé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ "%.0f"|format(expense.montant) }} Fcfa</strong></td>
+                                    <td>
+                                        <span class="badge {{ get_status_badge_class(expense.statut) }}">
+                                            {% if expense.statut == 'en_attente' %}En attente
+                                            {% elif expense.statut == 'approuve' %}Approuvé
+                                            {% elif expense.statut == 'refuse' %}Refusé
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a class="btn btn-outline-primary" title="Voir détails"
+                                                href="{{ url_for('main.expense_detail', expense_id=expense.id) }}">
+                                                <i data-feather="eye"></i>
+                                            </a>
+                                            {% if current_user.role.name == 'Administrateur' and expense.statut == 'en_attente' %}
+                                            <form action="{{ url_for('main.approve_expense', expense_id=expense.id) }}"
+                                                method="post" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-success" title="Approuver">
+                                                    <i data-feather="check"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            {% if current_user.role.name == 'Administrateur' and expense.statut == 'approuve' %}
+                                            <form action="{{ url_for('main.reject_expense', expense_id=expense.id) }}"
+                                                method="post" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-danger" title="Désapprouver">
+                                                    <i data-feather="slash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            {% if current_user.role.name == 'Administrateur' %}
+                                            <a class="btn btn-outline-warning" title="Éditer"
+                                                href="{{ url_for('main.edit_expense', expense_id=expense.id) }}">
+                                                <i data-feather="edit"></i>
+                                            </a>
+                                            <form action="{{ url_for('main.delete_expense', expense_id=expense.id) }}"
+                                                method="post" style="display:inline;"
+                                                onsubmit="return confirm('Supprimer cette dépense ?');">
+                                                <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i data-feather="credit-card" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <p class="text-muted">Aucune dépense enregistrée</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvelle dépense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.add_expense') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="titre" class="form-label">Titre *</label>
+                        <input type="text" class="form-control" id="titre" name="titre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="montant" class="form-label">Montant (Fcfa) *</label>
+                            <input type="number" class="form-control" id="montant" name="montant" min="0" step="0.01"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="categorie" class="form-label">Catégorie</label>
+                            <select class="form-select" id="categorie" name="categorie">
+                                <option value="">Sélectionner</option>
+                                <option value="Transport">Transport</option>
+                                <option value="Carburant">Carburant</option>
+                                <option value="Repas">Repas</option>
+                                <option value="Hébergement">Hébergement</option>
+                                <option value="Matériel">Matériel</option>
+                                <option value="Formation">Formation</option>
+                                <option value="Salaire">Salaire</option>
+                                <option value="Loyer">Loyer</option>
+                                <option value="Eau">Facture eau</option>
+                                <option value="Sonatel">Facture sonatel</option>
+                                <option value="MainOeuvre">Main d'oeuvre mécanicien</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3 mt-3">
+                        <label for="date_depense" class="form-label">Date de dépense</label>
+                        <input type="date" class="form-control" id="date_depense" name="date_depense"
+                            value="{{ today }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="facture" class="form-label">Facture (PDF ou image)</label>
+                        <input type="file" class="form-control" id="facture" name="facture" accept=".pdf,image/*">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter dépense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var table = $('#depensesTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+            },
+            order: [[0, 'desc']],  // Tri par date décroissante par défaut
+            responsive: true,      // Activation du mode responsive
+            columnDefs: [
+                { targets: [0], type: 'date-eu' }  // Format de date européen pour la colonne date
+            ],
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',  // Disposition des éléments de contrôle
+            pageLength: 10,                   // 10 lignes par page par défaut
+            lengthMenu: [10, 25, 50, 100]     // Options de nombre de lignes par page
+        });
+
+        // Filtrage dynamique par site (pour l'administrateur)
+        document.querySelectorAll('.site-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var site = this.getAttribute('data-site');
+                // 3 = index de la colonne "Site" (Date, Titre, Employé, Site, ...)
+                table.column(3).search(site).draw();
+                document.getElementById('resetSiteFilter').style.display = 'inline-block';
+            });
+        });
+
+        // Réinitialiser le filtre
+        document.getElementById('resetSiteFilter').addEventListener('click', function() {
+            table.column(3).search('').draw();
+            this.style.display = 'none';
+        });
+
+        if (window.feather) feather.replace();
+    });
+</script>
+<!-- Script de filtrage -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const siteFilter = document.getElementById("siteFilter");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const employeeFilter = document.getElementById("employeeFilter");
+    const rows = document.querySelectorAll("#depensesTable tbody tr");
+    const resetBtn = document.getElementById("resetFilters");
+
+    function applyFilters() {
+        const siteVal = siteFilter ? siteFilter.value : "";
+        const catVal = categoryFilter.value;
+        const empVal = employeeFilter ? employeeFilter.value : "";
+        let filtered = false;
+
+        rows.forEach(row => {
+            const matchSite = !siteVal || row.dataset.site === siteVal;
+            const matchCat = !catVal || row.dataset.category === catVal;
+            const matchEmp = !empVal || row.dataset.employee === empVal;
+
+            if (matchSite && matchCat && matchEmp) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+                filtered = true;
+            }
+        });
+
+        resetBtn.style.display = filtered ? "inline-block" : "none";
+    }
+
+    if (siteFilter) siteFilter.addEventListener("change", applyFilters);
+    if (employeeFilter) employeeFilter.addEventListener("change", applyFilters);
+    categoryFilter.addEventListener("change", applyFilters);
+
+    resetBtn.addEventListener("click", function () {
+        if (siteFilter) siteFilter.value = "";
+        if (employeeFilter) employeeFilter.value = "";
+        categoryFilter.value = "";
+        rows.forEach(row => row.style.display = "");
+        this.style.display = "none";
+    });
+});
+</script>
+
+{% endblock %}

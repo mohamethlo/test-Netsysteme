@@ -1,0 +1,65 @@
+<!-- templates/installations/add.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Nouvelle installation</h2>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.add_installation') }}">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="prenom" class="form-label">Prénom</label>
+                <input type="text" class="form-control" id="prenom" name="prenom" required>
+            </div>
+            <div class="col-md-6">
+                <label for="nom" class="form-label">Nom</label>
+                <input type="text" class="form-control" id="nom" name="nom" required>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="tel" class="form-label">Téléphone</label>
+                <input type="text" class="form-control" id="tel" name="tel" required>
+            </div>
+            <div class="col-md-6">
+                <label for="total" class="form-label">Montant total</label>
+                <input type="number" step="0.01" class="form-control" id="total" name="total" required>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="avance" class="form-label">Avance</label>
+                <input type="number" step="0.01" class="form-control" id="avance" name="avance" required>
+            </div>
+            <div class="col-md-6">
+                <label for="date_install" class="form-label">Date installation</label>
+                <input type="date" class="form-control" id="date_install" name="date_install" required>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label for="methode" class="form-label">Méthode de paiement</label>
+                <select class="form-control" id="methode" name="methode" required>
+                    <option value="cash">Espèce</option>
+                    <option value="one_tranche">1 tranche</option>
+                    <option value="two_tranche">2 tranches</option>
+                    <option value="three_tranche">3 tranches</option>
+                    <option value="four_tranche">4 tranches</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="date_echeance" class="form-label">Date d'échéance</label>
+                <input type="date" class="form-control" id="date_echeance" name="date_echeance">
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <label for="contrat" class="form-label">Contrat (PDF ou image)</label>
+                <input type="file" class="form-control" id="contrat" name="contrat" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Ajouter</button>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

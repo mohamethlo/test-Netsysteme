@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier article - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="edit"></i>
+                    Modifier l'article
+                </h2>
+                <a href="{{ url_for('main.inventory') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left"></i>
+                    Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <!-- Section Image -->
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-3">
+                                    {% if item.image_path %}
+                                        <img src="{{ url_for('static', filename=item.image_path) }}" 
+                                             class="img-thumbnail me-3" 
+                                             style="max-width: 100px; max-height: 100px;"
+                                             alt="Image actuelle">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center me-3" 
+                                             style="width: 100px; height: 100px;">
+                                            <i data-feather="image" class="text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <label for="image" class="form-label">Changer l'image</label>
+                                        <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                                        {% if item.image_path %}
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="remove_image" name="remove_image">
+                                                <label class="form-check-label" for="remove_image">
+                                                    Supprimer l'image actuelle
+                                                </label>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Champs existants -->
+                            <div class="col-md-8">
+                                <label for="name" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ item.name }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="reference" class="form-label">Référence</label>
+                                <input type="text" class="form-control" id="reference" name="reference"
+                                       value="{{ item.reference if item.reference }}">
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="2">{{ item.description if item.description }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="category_id" class="form-label">Catégorie</label>
+                                <select class="form-select" id="category_id" name="category_id">
+                                    <option value="">Sans catégorie</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if item.category_id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="unit" class="form-label">Unité</label>
+                                <input type="text" class="form-control" id="unit" name="unit" 
+                                       value="{{ item.unit if item.unit else 'pièce' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="seuil_alerte" class="form-label">Seuil d'alerte</label>
+                                <input type="number" class="form-control" id="seuil_alerte" name="seuil_alerte" 
+                                       min="0" value="{{ item.seuil_alerte if item.seuil_alerte else 10 }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="prix_achat" class="form-label">Prix d'achat (Fcfa)</label>
+                                <input type="number" class="form-control" id="prix_achat" name="prix_achat" 
+                                       min="0" step="1" value="{{ item.prix_achat if item.prix_achat }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="prix_vente" class="form-label">Prix de vente (Fcfa)</label>
+                                <input type="number" class="form-control" id="prix_vente" name="prix_vente" 
+                                       min="0" step="1" value="{{ item.prix_vente if item.prix_vente }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fournisseur" class="form-label">Fournisseur</label>
+                                <input type="text" class="form-control" id="fournisseur" name="fournisseur"
+                                       value="{{ item.fournisseur if item.fournisseur }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="emplacement" class="form-label">Emplacement</label>
+                                <input type="text" class="form-control" id="emplacement" name="emplacement"
+                                       value="{{ item.emplacement if item.emplacement }}">
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save"></i>
+                                    Enregistrer les modifications
+                                </button>
+                                <a href="{{ url_for('main.inventory') }}" class="btn btn-outline-secondary ms-2">
+                                    Annuler
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

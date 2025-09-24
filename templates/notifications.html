@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Mes notifications{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4"><i data-feather="mail"></i> Mes notifications</h2>
+    <div class="list-group">
+        {% for notif in notifications %}
+        <div class="list-group-item d-flex justify-content-between align-items-center {% if not notif.is_read %}bg-light{% endif %}">
+            <div>
+                <span class="{% if not notif.is_read %}fw-bold{% endif %}">{{ notif.message }}</span>
+                <br>
+                <small class="text-muted">{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+            {% if not notif.is_read %}
+            <form method="post" action="{{ url_for('main.mark_notification_read', notif_id=notif.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-success">Marquer comme lu</button>
+            </form>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">Aucune notification.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Détail dépense{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Détail de la dépense</h2>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Titre :</strong> {{ expense.titre }}</p>
+            <p><strong>Description :</strong> {{ expense.description or "—" }}</p>
+            <p><strong>Montant :</strong> {{ "%.2f"|format(expense.montant) }} Fcfa</p>
+            <p><strong>Catégorie :</strong> {{ expense.categorie or "Non catégorisé" }}</p>
+            <p><strong>Date :</strong> {{ expense.date_depense.strftime('%d/%m/%Y') }}</p>
+            <p><strong>Statut :</strong>
+                <span class="badge {{ get_status_badge_class(expense.statut) }}">
+                    {% if expense.statut == 'en_attente' %}En attente
+                    {% elif expense.statut == 'approuve' %}Approuvé
+                    {% elif expense.statut == 'refuse' %}Refusé
+                    {% endif %}
+                </span>
+            </p>
+            {% if expense.justificatif %}
+                <p><strong>Justificatif :</strong>
+                    {% if expense.justificatif.endswith('.pdf') %}
+                        <a href="{{ url_for('static', filename=expense.justificatif.replace('\\', '/')) }}" target="_blank">Voir le PDF</a>
+                    {% else %}
+                        <img src="{{ url_for('static', filename=expense.justificatif.replace('\\', '/')) }}" alt="Facture" class="img-fluid" style="max-width:400px;">
+                    {% endif %}
+                </p>
+            {% else %}
+                <p><strong>Justificatif :</strong> Aucun fichier</p>
+            {% endif %}
+            <a href="{{ url_for('main.expenses_by_site', site=expense.site) }}" class="btn btn-secondary mt-3">Retour</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

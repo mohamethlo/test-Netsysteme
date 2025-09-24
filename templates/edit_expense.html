@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier dépense - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i data-feather="edit"></i> Modifier la dépense</h4>
+                </div>
+                <form action="{{ url_for('main.edit_expense', expense_id=expense.id) }}" method="POST">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="titre" class="form-label">Titre *</label>
+                            <input type="text" class="form-control" id="titre" name="titre" value="{{ expense.titre }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ expense.description }}</textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="montant" class="form-label">Montant (Fcfa) *</label>
+                                <input type="number" class="form-control" id="montant" name="montant" min="0" step="0.01" value="{{ expense.montant }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="categorie" class="form-label">Catégorie</label>
+                                <select class="form-select" id="categorie" name="categorie">
+                                    <option value="">Sélectionner</option>
+                                    <option value="Transport" {% if expense.categorie == 'Transport' %}selected{% endif %}>Transport</option>
+                                    <option value="Carburant" {% if expense.categorie == 'Carburant' %}selected{% endif %}>Carburant</option>
+                                    <option value="Repas" {% if expense.categorie == 'Repas' %}selected{% endif %}>Repas</option>
+                                    <option value="Hébergement" {% if expense.categorie == 'Hébergement' %}selected{% endif %}>Hébergement</option>
+                                    <option value="Matériel" {% if expense.categorie == 'Matériel' %}selected{% endif %}>Matériel</option>
+                                    <option value="Formation" {% if expense.categorie == 'Formation' %}selected{% endif %}>Formation</option>
+                                    <option value="Salaire" {% if expense.categorie == 'Salaire' %}selected{% endif %}>Salaire</option>
+                                    <option value="Loyer" {% if expense.categorie == 'Loyer' %}selected{% endif %}>Loyer</option>
+                                    <option value="Eau" {% if expense.categorie == 'Eau' %}selected{% endif %}>Facture eau</option>
+                                    <option value="Sonatel" {% if expense.categorie == 'Sonatel' %}selected{% endif %}>Facture sonatel</option>
+                                    <option value="MainOeuvre" {% if expense.categorie == 'MainOeuvre' %}selected{% endif %}>Main d'oeuvre mécanicien</option>
+                                    <option value="Autre" {% if expense.categorie == 'Autre' %}selected{% endif %}>Autre</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label for="date_depense" class="form-label">Date de dépense</label>
+                            <input type="date" class="form-control" id="date_depense" name="date_depense" value="{{ expense.date_depense.strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ url_for('main.expenses_by_site', site=expense.site) }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

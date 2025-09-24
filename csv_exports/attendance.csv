@@ -1,0 +1,11 @@
+id,user_id,date,check_in,check_out,check_in_location,check_out_location,check_in_lat,check_in_lng,check_out_lat,check_out_lng,work_location_id,status,notes,type_pointage
+7,6,2025-06-15,2025-06-15 16:59:55,2025-06-15 17:37:35,Grand Yoff,Position de sortie,14.7421,-17.4477,14.7421,-17.4477,4,present,,bureau
+5,1,2025-06-11,2025-06-11 13:21:50,,Bureau NETSYS,,14.7554,-17.4723,,,3,present,,bureau
+6,3,2025-06-11,2025-06-11 13:22:54,,Bureau NETSYS,,14.7554,-17.4723,,,3,present,test,bureau
+8,2,2025-06-15,2025-06-15 17:08:54,2025-06-15 17:16:39,Grand Yoff,Position de sortie,14.7421,-17.4477,14.7325,-17.426,4,present,,bureau
+9,1,2025-06-15,2025-06-15 17:38:01,2025-06-15 17:38:18,Grand Yoff,Position de sortie,14.7421,-17.4477,14.7421,-17.4477,4,present,,bureau
+10,1,2025-06-17,2025-06-17 15:34:55,,Bureau NETSYS,,14.7556,-17.4722,,,3,present,Je suis normalement en retard mais je suis en phase de test,bureau
+11,1,2025-06-24,2025-06-24 15:23:14,,Bureau NETSYS,Position de sortie,14.7554,-17.4723,14.7554,-17.4723,3,present,,bureau
+12,1,2025-06-28,2025-06-28 10:51:49,,Grand Yoff,,14.7421,-17.4478,,,4,present,Je viens d'ajouter le lieu et le nom de pointage dans le rapport,bureau
+13,2,2025-06-28,2025-06-28 11:26:54,,Grand Yoff,,14.7421,-17.4478,,,4,present,Télétravail,bureau
+14,1,2025-07-02,2025-07-02 09:59:44,,Bureau NETSYS,,14.7554,-17.4722,,,3,present,,bureau

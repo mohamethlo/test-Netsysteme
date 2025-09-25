@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gestion Entreprise{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Feather Icons -->
@@ -19,10 +19,7 @@
     <!-- jQuery first -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     
-    <!-- Then Bootstrap -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
-    
-    <!-- Then DataTables and its extensions -->
+    <!-- DataTables and extensions -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
     
@@ -42,50 +39,99 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Dépendances FullCalendar -->
+    <!-- FullCalendar -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
 </head>
 
 <body>
     {% if current_user.is_authenticated %}
-    <!-- Modern Navbar Header (grand écran et responsive) -->
-    <nav class="navbar navbar-dark bg-dark shadow-sm border-0 fixed-top"
-        style="backdrop-filter: blur(8px); background: rgba(20,24,28,0.95); z-index: 1050;">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.dashboard') }}">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo"
-                    style="height:auto;width:80px;object-fit:cover;"
-                    class="rounded-circle border border-2 border-primary shadow-sm bg-white">
-                <span class="fw-bold fs-4 d-none d-md-inline" style="letter-spacing:1px;">NETSYSTEME</span>
-            </a>
+    <!-- Header moderne -->
+    <header class="modern-header">
+        <div class="header-content">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Toggle sidebar pour mobile -->
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i data-feather="menu"></i>
+                </button>
+                
+                <!-- Logo -->
+                <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %} logo-link">
+                    <div class="logo-section">
+                        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo">
+                        <span class="logo-text">NETSYSTEME</span>
+                    </div>
+                </a>
 
-            <div class="d-flex align-items-center gap-2">
-                <button id="themeToggleBtn" class="btn btn-outline-light rounded-circle p-2" type="button"
-                    title="Changer le thème" style="width:40px;height:40px;">
-                    <i id="themeIcon" data-feather="sun"></i>
-                </button>
-                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <!-- User dropdown moved here -->
-                <div class="dropdown">
-                    <a class="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
-                        href="#" role="button" data-bs-toggle="dropdown" style="width:40px;height:40px;">
-                        <span class="avatar-circle fw-bold"
-                            style="background:var(--bs-primary);color:#fff;font-size:1.1em;">
-                            {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
-                        </span>
+            </div>
+
+            <!-- Navigation principale -->
+            <nav class="main-nav">
+                {% if current_user.has_permission('clients') or current_user.has_permission('devis') or current_user.has_permission('inventory') or current_user.has_permission('all') %}
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-section="commercial">
+                        <i data-feather="shopping-cart"></i>
+                        <span>Gestion Commercial</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                </div>
+                {% endif %}
+
+                {% if current_user.has_permission('expance') or current_user.has_permission('salary_advances') or current_user.has_permission('work_locations') or current_user.has_permission('all') %}
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-section="rh">
+                        <i data-feather="users"></i>
+                        <span>Gestion RH</span>
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if current_user.has_permission('inventory') or current_user.has_permission('all') %}
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-section="stock">
+                        <i data-feather="credit-card"></i>
+                        <span>Gestion Comptable</span>
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if current_user.has_permission('interventions') or current_user.has_permission('installations') %}
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-section="interventions">
+                        <i data-feather="tool"></i>
+                        <span>Gestion Interventions</span>
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if current_user.has_permission('users') %}
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-section="users">
+                        <i data-feather="user"></i>
+                        <span>Gestion Utilisateurs</span>
+                    </a>                    
+                </div>
+                {% endif %}
+
+            </nav>
+
+            <!-- Actions header -->
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggleBtn" title="Changer le thème">
+                    <i data-feather="sun" id="themeIcon"></i>
+                </button>
+
+                <div class="dropdown">
+                    <button class="user-avatar" data-bs-toggle="dropdown">
+                        {{ current_user.prenom[0]|upper }}{{ current_user.nom[0]|upper }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg">
                         <li>
                             <span class="dropdown-item-text fw-semibold text-primary">
                                 {{ current_user.prenom }} {{ current_user.nom }}
                             </span>
                         </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ url_for('main.profile') }}">
                                 <i data-feather="settings"></i> Profil
@@ -98,110 +144,188 @@
                         </li>
                     </ul>
                 </div>
-
-            </div>
-            <div class="collapse navbar-collapse mt-2 mt-lg-0" id="navbarNav">
-                <ul class="navbar-nav me-auto ms-lg-4 gap-lg-2">
-                    <!-- <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
-                            <i data-feather="home"></i> Tableau de bord
-                        </a>
-                    </li> -->
-                    {% if current_user.has_permission('attendance') 
-                        or current_user.has_permission('salary_advances') 
-                        or current_user.has_permission('work_locations') 
-                        or current_user.has_permission('all') %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.gestion_rh' %}active{% endif %}"
-                        href="{{ url_for('main.gestion_rh') }}">
-                            <i data-feather="users"></i> Gestion RH
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    {% if current_user.has_permission('clients') 
-                        or current_user.has_permission('devis') 
-                        or current_user.has_permission('inventory') 
-                        or current_user.has_permission('all') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.gestion_commercial') }}">
-                            <i data-feather="shopping-cart"></i> Gestion Commercial
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    {% if current_user.has_permission('expenses') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.gestion_comptable') }}">
-                            <i data-feather="credit-card"></i> Gestion Comptable
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    {% if current_user.has_permission('interventions') 
-                        or current_user.has_permission('installations') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.gestion_interventions') }}">
-                            <i data-feather="tool"></i> Gestion Interventions
-                        </a>
-                    </li>
-                    {% endif %}
-                        
-                    
-
-                    {% if current_user.has_permission('facturation') %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.blueprint == 'billing.billing_dashboard' %}active{% endif %}" 
-                        href="{{ url_for('billing.billing_dashboard') }}">
-                            <i data-feather="dollar-sign"></i> Gestion Factures
-                        </a>
-                    </li>
-                    {% endif %}
-                  
-                    {% if current_user.has_permission('users') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.users') }}">
-                            <i data-feather="user-plus"></i>Gestion Utilisateurs
-                        </a>
-                    </li>
-
-                    {% endif %}
-                </ul>
-                <!-- <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                            <span class="d-none d-lg-inline"><i data-feather="user"></i></span>
-                            <span class="fw-semibold">{{ current_user.prenom }} {{ current_user.nom }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('main.profile') }}">
-                                    <i data-feather="settings"></i> Profil
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
-                                    <i data-feather="log-out"></i> Déconnexion
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul> -->
             </div>
         </div>
-    </nav>
+    </header>
+
+    <!-- Sidebar moderne -->
+    <aside class="modern-sidebar" id="sidebar">
+        <div class="sidebar-content">
+
+            <!-- Dashboard toujours visible -->
+            <div class="sidebar-section">
+                <h6 class="sidebar-title">Navigation</h6>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                            <i data-feather="home"></i>
+                            <span>Tableau de bord</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Menu dynamique Commercial -->
+            <div class="sidebar-section" id="commercial-menu" style="display: none;">
+                <h6 class="sidebar-title">Gestion Commerciale</h6>
+                <ul class="sidebar-menu">
+                    {% if current_user.has_permission('clients') or current_user.has_permission('all') %}
+                    <li>
+                        <a href="{{ url_for('main.gestion_commercial') }}">
+                            <i data-feather="users"></i>
+                            <span>Clients</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.has_permission('devis') or current_user.has_permission('all') %}
+                    <li>
+                        <a href="#">
+                            <i data-feather="file-text"></i>
+                            <span>Devis</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="#">
+                            <i data-feather="trending-up"></i>
+                            <span>Ventes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i data-feather="credit-card"></i>
+                            <span>Paiements</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Menu dynamique RH -->
+            <div class="sidebar-section" id="rh-menu" style="display: none;">
+                <h6 class="sidebar-title">Ressources Humaines</h6>
+                <ul class="sidebar-menu">
+                    {% if current_user.has_permission('attendance') or current_user.has_permission('all') %}
+                    <li>
+                        <a href="{{ url_for('main.gestion_rh') }}">
+                            <i data-feather="clock"></i>
+                            <span>Pointage</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.has_permission('salary_advances') or current_user.has_permission('all') %}
+                    <li>
+                        <a href="#">
+                            <i data-feather="dollar-sign"></i>
+                            <span>Avances</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.has_permission('work_locations') or current_user.has_permission('all') %}
+                    <li>
+                        <a href="#">
+                            <i data-feather="map-pin"></i>
+                            <span>Zones de travail</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Menu dynamique Stock -->
+            <div class="sidebar-section" id="stock-menu" style="display: none;">
+                <h6 class="sidebar-title">Gestion Stock</h6>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="#">
+                            <i data-feather="package"></i>
+                            <span>Produits</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i data-feather="inbox"></i>
+                            <span>Inventaire</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i data-feather="truck"></i>
+                            <span>Fournisseurs</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i data-feather="alert-circle"></i>
+                            <span>Stock faible</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Menu dynamique Interventions -->
+            <div class="sidebar-section" id="interventions-menu" style="display: none;">
+                <h6 class="sidebar-title">Interventions</h6>
+                <ul class="sidebar-menu">
+                    {% if current_user.has_permission('interventions') %}
+                    <li>
+                        <a href="{{ url_for('main.gestion_interventions') }}">
+                            <i data-feather="tool"></i>
+                            <span>Interventions</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.has_permission('installations') %}
+                    <li>
+                        <a href="#">
+                            <i data-feather="settings"></i>
+                            <span>Installations</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="#">
+                            <i data-feather="calendar"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i data-feather="map"></i>
+                            <span>Carte</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Menu dynamique Utilisateur -->
+            <div class="sidebar-section" id="users-menu" style="display: none;">
+                <h6 class="sidebar-title">Gestion Utilisateurs</h6>
+                <ul class="sidebar-menu">
+                    {% if current_user.has_permission('users') %}
+                    <li>
+                        <a href="{{ url_for('main.users') }}">
+                            <i data-feather="user-plus"></i>
+                            <span>Ajout Utilisateur</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>            
+
+    </aside>
+
+    <!-- Overlay pour mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     {% endif %}
 
-    <!-- Main Content -->
-    <main class="{% if current_user.is_authenticated %}container-lg mt-5{% endif %}">
-        <!-- Flash Messages -->
+    <!-- Contenu principal -->
+    <main class="main-content {% if not current_user.is_authenticated %}sidebar-collapsed{% endif %}" id="mainContent">
+        <!-- Messages flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="container">
+        <div class="container-fluid mb-4">
             {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
-                role="alert">
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show animate-fade-in" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -213,16 +337,22 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block scripts %}{% endblock %}
+    
     <script>
         // Initialize Feather icons
         feather.replace();
+
+        // Variables globales
+        let currentSection = 'dashboard';
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
 
         // Gestion du thème
         const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -230,9 +360,12 @@
         const htmlTag = document.documentElement;
 
         function updateThemeIcon(theme) {
-            themeIcon.setAttribute('data-feather', theme === 'dark' ? 'moon' : 'sun');
-            feather.replace();
+            if (themeIcon) {
+                themeIcon.setAttribute('data-feather', theme === 'dark' ? 'moon' : 'sun');
+                feather.replace();
+            }
         }
+
         function toggleTheme() {
             let currentTheme = htmlTag.getAttribute('data-bs-theme') || 'light';
             let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -240,33 +373,311 @@
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
         }
+
+        // Initialisation du thème
         document.addEventListener('DOMContentLoaded', function () {
-            let savedTheme = localStorage.getItem('theme') || 'light';
+            let savedTheme = localStorage.getItem('theme') || 'dark';
             htmlTag.setAttribute('data-bs-theme', savedTheme);
             updateThemeIcon(savedTheme);
         });
+
         if (themeToggleBtn) {
             themeToggleBtn.addEventListener('click', toggleTheme);
         }
-    </script>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    Swal.fire({
-                        icon: "{{ 'success' if category == 'success' else 'error' }}",
-                        title: "{{ message }}",
-                        showConfirmButton: false,
-                        timer: 2500
-                    });
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    });
+        // Gestion de la navigation et sidebar dynamique
+        function showSidebarSection(sectionName) {
+            // Cacher tous les menus
+            const allMenus = document.querySelectorAll('.sidebar-section[id$="-menu"]');
+            allMenus.forEach(menu => {
+                menu.style.display = 'none';
+                menu.classList.remove('animate-slide-in');
+            });
+
+            // Afficher le menu sélectionné
+            const targetMenu = document.getElementById(sectionName + '-menu');
+            if (targetMenu) {
+                targetMenu.style.display = 'block';
+                targetMenu.classList.add('animate-slide-in');
+            }
+
+            // Mettre à jour les liens actifs
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            const activeLink = document.querySelector(`[data-section="${sectionName}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+
+            currentSection = sectionName;
+        }
+
+        // Gestion des clics sur la navigation
+        document.addEventListener('click', function(e) {
+            const navLink = e.target.closest('.nav-link[data-section]');
+            if (navLink) {
+                e.preventDefault();
+                const section = navLink.getAttribute('data-section');
+                showSidebarSection(section);
+                
+                // Fermer la sidebar sur mobile après sélection
+                if (window.innerWidth <= 992) {
+                    toggleSidebar(false);
+                }
+            }
+        });
+
+        // Gestion de la sidebar responsive
+        function toggleSidebar(show = null) {
+            const isVisible = sidebar && sidebar.classList.contains('show');
+            const shouldShow = show !== null ? show : !isVisible;
+
+            if (sidebar && sidebarOverlay) {
+                if (shouldShow) {
+                    sidebar.classList.add('show');
+                    sidebarOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        // Event listeners pour la sidebar
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => toggleSidebar());
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+        }
+
+        // Gestion responsive
+        function handleResize() {
+            if (window.innerWidth > 992) {
+                // Desktop
+                if (sidebar) sidebar.classList.remove('show');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Détecter la page actuelle et afficher le bon menu
+            const currentPath = window.location.pathname;
+            
+            if (currentPath.includes('commercial')) {
+                showSidebarSection('commercial');
+            } else if (currentPath.includes('rh') || currentPath.includes('gestion_rh')) {
+                showSidebarSection('rh');
+            } else if (currentPath.includes('stock') || currentPath.includes('inventory')) {
+                showSidebarSection('stock');
+            } else if (currentPath.includes('intervention')) {
+                showSidebarSection('interventions');
+            } else if (currentPath.includes('billing') || currentPath.includes('factur')) {
+                showSidebarSection('facturation');
+            }
+
+            // Animation d'entrée pour le contenu
+            const mainContentElement = document.getElementById('mainContent');
+            if (mainContentElement) {
+                mainContentElement.classList.add('animate-fade-in');
+            }
+
+            // Améliorer les interactions des cartes
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Messages flash avec SweetAlert2
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        Swal.fire({
+                            icon: "{{ 'success' if category == 'success' else 'error' }}",
+                            title: "{{ message }}",
+                            showConfirmButton: false,
+                            timer: 2500,
+                            toast: true,
+                            position: 'top-end',
+                            showClass: {
+                                popup: 'animate__animated animate__fadeInRight'
+                            },
+                            hideClass: {
+                                popup: 'animate__animated animate__fadeOutRight'
+                            }
+                        });
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            // Initialiser les tooltips Bootstrap
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Smooth scroll pour les ancres
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+
+        // Fonctions utilitaires pour l'amélioration de l'UX
+        function showLoading(element) {
+            if (element) {
+                element.classList.add('loading');
+                element.style.pointerEvents = 'none';
+            }
+        }
+
+        function hideLoading(element) {
+            if (element) {
+                element.classList.remove('loading');
+                element.style.pointerEvents = '';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            Swal.fire({
+                icon: type,
+                title: message,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        // Gestion des formulaires avec feedback visuel
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form.tagName === 'FORM') {
+                const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitBtn) {
+                    showLoading(submitBtn);
+                    submitBtn.disabled = true;
+                    
+                    // Réactiver après 5 secondes au cas où
+                    setTimeout(() => {
+                        hideLoading(submitBtn);
+                        submitBtn.disabled = false;
+                    }, 5000);
+                }
+            }
+        });
+
+        // Prévenire la double soumission
+        let formSubmitted = false;
+        document.addEventListener('submit', function(e) {
+            if (formSubmitted) {
+                e.preventDefault();
+                return false;
+            }
+            formSubmitted = true;
+            setTimeout(() => formSubmitted = false, 2000);
+        });
+
+        // Animation au scroll
+        function animateOnScroll() {
+            const elements = document.querySelectorAll('.card, .table-responsive');
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('animate-fade-in');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', animateOnScroll);
+        
+        // Auto-focus sur les champs de recherche
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="recherch"], input[placeholder*="Recherch"]');
+            if (searchInputs.length > 0) {
+                // Focus sur le premier champ de recherche visible
+                const visibleSearch = Array.from(searchInputs).find(input => 
+                    input.offsetParent !== null
+                );
+                if (visibleSearch) {
+                    setTimeout(() => visibleSearch.focus(), 100);
+                }
+            }
+        });
+
+        // Raccourcis clavier
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+K ou Cmd+K pour focus sur recherche
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const searchInput = document.querySelector('input[type="search"]');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }
+            
+            // Echap pour fermer modals et sidebar
+            if (e.key === 'Escape') {
+                // Fermer sidebar sur mobile
+                if (window.innerWidth <= 992) {
+                    toggleSidebar(false);
+                }
+            }
+        });
+
+        // Gestion des erreurs de chargement d'images
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.target.style.display = 'none';
+                // Optionnel: remplacer par une image par défaut
+                // e.target.src = '/static/img/placeholder.png';
+            }
+        }, true);
+
+        // Performance: Lazy loading pour les images
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            imageObserver.unobserve(img);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
     </script>
 
 </body>
-
 </html>
